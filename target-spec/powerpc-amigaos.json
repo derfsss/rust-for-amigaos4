@@ -1,0 +1,35 @@
+{
+  "arch": "powerpc",
+  "data-layout": "E-m:e-p:32:32-Fn32-i64:64-n32",
+  "llvm-target": "powerpc-unknown-none",
+  "target-endian": "big",
+  "target-pointer-width": 32,
+  "os": "none",
+  "env": "",
+  "vendor": "unknown",
+
+  "executables": true,
+  "linker-flavor": "gnu-cc",
+  "linker": "fake-linker.bat",
+  "dynamic-linking": false,
+  "has-thread-local": false,
+  "has-rpath": false,
+  "position-independent-executables": false,
+  "relocation-model": "static",
+  "crt-static-respected": false,
+  "no-default-libraries": true,
+
+  "panic-strategy": "abort",
+  "max-atomic-width": 32,
+
+  "features": "",
+
+  "pre-link-args": {
+    "gnu-cc": [
+      "-nostdlib",
+      "-nostartfiles"
+    ]
+  },
+
+  "use-ctors-section": true
+}

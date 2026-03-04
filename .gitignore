@@ -1,0 +1,12 @@
+# Rust build output
+target/
+
+# C build output
+build/
+
+# Fake linker logs
+fake-linker.log
+
+# OS files
+.DS_Store
+Thumbs.db

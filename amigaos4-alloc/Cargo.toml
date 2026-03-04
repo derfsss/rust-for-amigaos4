@@ -1,0 +1,13 @@
+[package]
+name = "amigaos4-alloc"
+version = "0.1.0"
+edition = "2021"
+description = "Global allocator backends for Rust-on-AmigaOS (clib4 or Exec)"
+
+[features]
+default = ["clib4"]
+clib4 = []
+exec = []
+
+[dependencies]
+amigaos4-sys = { path = "../amigaos4-sys", default-features = false, features = ["exec"] }
