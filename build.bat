@@ -56,7 +56,7 @@ if errorlevel 1 (
 echo   Rust staticlib built.
 echo.
 
-echo [2/2] Linking (Docker via WSL)...
+echo [2/2] Linking (Docker via WSL with clib4-nightly overlay)...
 
 REM Convert repo root to WSL path: W:\Code\foo -> /mnt/w/Code/foo
 set "WSL_PATH=%REPO_ROOT:\=/%"
@@ -67,7 +67,7 @@ for %%a in (a b c d e f g h i j k l m n o p q r s t u v w x y z) do (
 )
 set "WSL_PATH=/mnt/%DRIVE_LOWER%/%WSL_PATH:~3%"
 
-wsl sh -c "docker run --rm -v '%WSL_PATH%':/repo -w /repo/%PROJECT% walkero/amigagccondocker:os4-gcc11 make clean && docker run --rm -v '%WSL_PATH%':/repo -w /repo/%PROJECT% walkero/amigagccondocker:os4-gcc11 make all"
+wsl sh -c "docker run --rm -v '%WSL_PATH%':/repo -w /repo/%PROJECT% walkero/amigagccondocker:os4-gcc11 sh -c 'cp -r /repo/clib4-nightly/lib/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/lib/ && cp -r /repo/clib4-nightly/include/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include/ && make clean' && docker run --rm -v '%WSL_PATH%':/repo -w /repo/%PROJECT% walkero/amigagccondocker:os4-gcc11 sh -c 'cp -r /repo/clib4-nightly/lib/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/lib/ && cp -r /repo/clib4-nightly/include/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include/ && make all'"
 
 if errorlevel 1 (
     echo ERROR: Docker link failed.

@@ -58,18 +58,22 @@ cargo +nightly build --release
 echo "  Rust staticlib built."
 echo
 
-echo "[2/2] Linking (Docker)..."
+echo "[2/2] Linking (Docker with clib4-nightly overlay)..."
 docker run --rm \
     -v "$REPO_ROOT":/repo \
     -w "/repo/$PROJECT" \
     walkero/amigagccondocker:os4-gcc11 \
-    make clean
+    sh -c "cp -r /repo/clib4-nightly/lib/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/lib/ && \
+           cp -r /repo/clib4-nightly/include/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include/ && \
+           make clean"
 
 docker run --rm \
     -v "$REPO_ROOT":/repo \
     -w "/repo/$PROJECT" \
     walkero/amigagccondocker:os4-gcc11 \
-    make all
+    sh -c "cp -r /repo/clib4-nightly/lib/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/lib/ && \
+           cp -r /repo/clib4-nightly/include/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include/ && \
+           make all"
 
 echo
 echo "=== Build complete: $PROJECT ==="

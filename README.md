@@ -17,7 +17,7 @@ This project was developed and tested with the following exact versions. **Other
 | Rust | `rustc 1.96.0-nightly (80381278a 2026-03-01)` | Nightly required for `-Zbuild-std` |
 | AmigaOS SDK | `54.16 (22.08.2022)` | AmigaOS 4.1 Final Edition SDK |
 | Cross-compiler | `ppc-amigaos-gcc 11.5.0` (adtools build) | Inside Docker image |
-| C library | `clib4 2.0.0 (16.08.2025)` | Inside Docker image |
+| C library | `clib4 nightly (0d5fe579, 2026-01-28)` | Pre-built in `clib4-nightly/`, overlaid at build time |
 | Docker image | `walkero/amigagccondocker:os4-gcc11` (built 2025-08-18) | Contains GCC + SDK + clib4 |
 | QEMU | `qemu-system-ppc -M amigaone` | Test target |
 
@@ -183,6 +183,12 @@ rust-for-amigaos4/
 ├── setup.sh / setup.bat       # One-time setup (Rust nightly + Docker image)
 ├── build.sh / build.bat       # Build any project: ./build.sh <path>
 ├── .gitignore
+│
+├── clib4-nightly/             # Pre-built clib4 (nightly tag), overlaid into Docker at build time
+│   ├── lib/                   # Static/shared libs, crt objects
+│   ├── include/               # clib4 headers
+│   ├── clib4.library          # Shared library for AmigaOS
+│   └── clib4.library.debug
 │
 ├── target-spec/               # Cross-compilation infrastructure
 │   ├── powerpc-amigaos.json   # Custom Rust target specification
