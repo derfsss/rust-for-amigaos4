@@ -1,0 +1,23 @@
+[package]
+name = "thread-demo"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "thread_demo"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+
+[dependencies]
+amigaos4-sys = { path = "../../amigaos4-sys" }
+amigaos4 = { path = "../../amigaos4" }
+amigaos4-alloc = { path = "../../amigaos4-alloc" }

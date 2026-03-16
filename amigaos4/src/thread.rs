@@ -1,3 +1,11 @@
+//! Thread spawning via clib4 pthreads (application mode only).
+//!
+//! [`spawn`] creates a new thread from a closure and returns a
+//! [`JoinHandle`] to retrieve the result. The closure and result
+//! are transferred via heap-allocated boxes.
+//!
+//! Requires the `thread` feature (enabled by default via `app`).
+
 use alloc::boxed::Box;
 use core::marker::PhantomData;
 use crate::error::{AmigaError, Result};

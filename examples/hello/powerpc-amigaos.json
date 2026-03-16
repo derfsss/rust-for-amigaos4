@@ -10,7 +10,7 @@
 
   "executables": true,
   "linker-flavor": "gnu-cc",
-  "linker": "fake-linker.bat",
+  "linker": "./fake-linker.sh",
   "dynamic-linking": false,
   "has-thread-local": false,
   "has-rpath": false,

@@ -1,3 +1,9 @@
+//! RAII memory allocation via AmigaOS `AllocVecTagList`/`FreeVec`.
+//!
+//! [`AmigaVec`] provides a safe, auto-freeing wrapper around OS memory
+//! allocation. Use this for buffers that need specific memory type flags
+//! (e.g. `MEMF_SHARED` for DMA) rather than the global allocator.
+
 use crate::error::{AmigaError, Result};
 use crate::tag::TagListBuilder;
 use amigaos4_sys::{APTR, AVT_TYPE, AVT_CLEAR_WITH_VALUE};
@@ -13,6 +19,9 @@ pub struct AmigaVec {
 impl AmigaVec {
     /// Allocate `size` bytes with the given memory type flags.
     pub fn alloc(size: usize, mem_type: u32) -> Result<Self> {
+        if size > u32::MAX as usize {
+            return Err(AmigaError::AllocationFailed);
+        }
         let tags = TagListBuilder::new()
             .tag(AVT_TYPE, mem_type)
             .build();
@@ -28,6 +37,9 @@ impl AmigaVec {
 
     /// Allocate `size` bytes, cleared to `fill` value.
     pub fn alloc_cleared(size: usize, mem_type: u32, fill: u8) -> Result<Self> {
+        if size > u32::MAX as usize {
+            return Err(AmigaError::AllocationFailed);
+        }
         let tags = TagListBuilder::new()
             .tag(AVT_TYPE, mem_type)
             .tag(AVT_CLEAR_WITH_VALUE, fill as u32)
@@ -42,31 +54,37 @@ impl AmigaVec {
         }
     }
 
+    /// Get a raw pointer to the allocated memory.
     #[inline]
     pub fn as_ptr(&self) -> *const u8 {
         self.ptr
     }
 
+    /// Get a mutable raw pointer to the allocated memory.
     #[inline]
     pub fn as_mut_ptr(&mut self) -> *mut u8 {
         self.ptr
     }
 
+    /// Return the size of the allocation in bytes.
     #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Return `true` if the allocation has zero length.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// View the allocation as a byte slice.
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
         unsafe { core::slice::from_raw_parts(self.ptr, self.len) }
     }
 
+    /// View the allocation as a mutable byte slice.
     #[inline]
     pub fn as_mut_slice(&mut self) -> &mut [u8] {
         unsafe { core::slice::from_raw_parts_mut(self.ptr, self.len) }
@@ -78,5 +96,20 @@ impl Drop for AmigaVec {
         if !self.ptr.is_null() {
             unsafe { amigaos4_sys::exec_free_vec(self.ptr as APTR) }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use core::mem;
+
+    #[test]
+    fn amiga_vec_struct_size() {
+        // AmigaVec contains a *mut u8 and a usize
+        assert_eq!(
+            mem::size_of::<AmigaVec>(),
+            mem::size_of::<*mut u8>() + mem::size_of::<usize>()
+        );
     }
 }

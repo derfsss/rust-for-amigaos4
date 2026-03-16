@@ -1,3 +1,10 @@
+//! RAII BOOPSI object management via `NewObjectA`/`DisposeObject`.
+//!
+//! BOOPSI (Basic Object-Oriented Programming System for Intuition) is
+//! AmigaOS's object system for UI gadgets and classes. [`AmigaObject`]
+//! wraps object creation and disposal, with `into_raw()` for transferring
+//! ownership to parent layouts.
+
 use crate::error::{AmigaError, Result};
 use amigaos4_sys::{APTR, TagItem};
 
@@ -14,7 +21,12 @@ impl AmigaObject {
     ///
     /// `class_id` must be a null-terminated byte string (e.g. `b"rootclass\0"`).
     /// `tags` should be a TAG_DONE-terminated array (use `TagListBuilder::build()`).
+    ///
+    /// Returns `Err(NullPointer)` if `class_id` is empty or not null-terminated.
     pub fn new(class_id: &[u8], tags: &[TagItem]) -> Result<Self> {
+        if class_id.is_empty() || class_id[class_id.len() - 1] != 0 {
+            return Err(AmigaError::NullPointer);
+        }
         let ptr = unsafe {
             amigaos4_sys::intuition_new_object_a(
                 core::ptr::null_mut(), // public class — no Class pointer
@@ -91,5 +103,16 @@ impl Drop for AmigaObject {
         if !self.ptr.is_null() {
             unsafe { amigaos4_sys::intuition_dispose_object(self.ptr) }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use core::mem;
+
+    #[test]
+    fn amiga_object_is_pointer_sized() {
+        assert_eq!(mem::size_of::<AmigaObject>(), mem::size_of::<*mut APTR>());
     }
 }

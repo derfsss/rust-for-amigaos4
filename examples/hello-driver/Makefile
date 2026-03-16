@@ -43,6 +43,7 @@ $(SYS_GLUE_OBJ): $(SYS_GLUE_SRC)
 
 $(TARGET): $(DRIVER_GLUE_OBJ) $(SYS_GLUE_OBJ) $(RUST_LIB)
 	$(CC) $(LDFLAGS) -o $@ $(DRIVER_GLUE_OBJ) $(SYS_GLUE_OBJ) $(RUST_LIB) $(LIBS)
+	ppc-amigaos-strip $@
 
 clean:
 	rm -rf build $(TARGET)

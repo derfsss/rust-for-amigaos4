@@ -1,3 +1,8 @@
+//! RAII message port management via `CreateMsgPort`/`DeleteMsgPort`.
+//!
+//! Message ports are the fundamental inter-process communication mechanism
+//! in AmigaOS. [`AmigaMsgPort`] ensures the port is cleaned up on drop.
+
 use crate::error::{AmigaError, Result};
 use amigaos4_sys::MsgPort;
 
@@ -17,6 +22,7 @@ impl AmigaMsgPort {
         }
     }
 
+    /// Get the raw `MsgPort` pointer.
     #[inline]
     pub fn as_ptr(&self) -> *mut MsgPort {
         self.ptr

@@ -1,17 +1,18 @@
 [package]
 name = "amigaos4"
-version = "0.1.0"
+version = "0.5.0"
 edition = "2021"
 description = "Safe Rust wrappers and std-like modules for AmigaOS 4.1"
 
 [features]
 default = ["app"]
-app = ["fs", "thread", "time", "env"]
+app = ["fs", "thread", "time", "env", "net"]
 driver = []
 fs = []
 thread = []
 time = []
 env = []
+net = []
 
 [dependencies]
-amigaos4-sys = { path = "../amigaos4-sys" }
+amigaos4-sys = { path = "../amigaos4-sys", features = ["locale", "graphics", "timer", "iffparse"] }

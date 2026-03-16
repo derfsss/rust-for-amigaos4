@@ -19,7 +19,7 @@ RUST_LIB  = target/powerpc-amigaos/release/libhello.a
 CFLAGS    = -mcrt=clib4 -O2 -Wall -I$(SDK_INC)
 
 # Linker flags
-LDFLAGS   = -mcrt=clib4
+LDFLAGS   = -mcrt=clib4 -Wl,--gc-sections -s
 LIBS      = -lpthread -lauto
 
 .PHONY: all clean
@@ -34,6 +34,7 @@ $(SYS_GLUE_OBJ): $(SYS_GLUE_SRC)
 
 $(TARGET): $(SYS_GLUE_OBJ) $(RUST_LIB)
 	$(CC) $(LDFLAGS) -o $@ $(SYS_GLUE_OBJ) $(RUST_LIB) $(LIBS)
+	ppc-amigaos-strip $@
 
 clean:
 	rm -rf build $(TARGET)

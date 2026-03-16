@@ -14,8 +14,10 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
-opt-level = "s"
+opt-level = "z"
 lto = true
+codegen-units = 1
+strip = "symbols"
 
 [dependencies]
 amigaos4-sys = { path = "../../amigaos4-sys" }

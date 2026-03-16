@@ -1,6 +1,6 @@
 [package]
 name = "amigaos4-sys"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Raw FFI bindings for AmigaOS 4.1 interfaces (129 interfaces, feature-gated)"
 

@@ -1,3 +1,9 @@
+//! RAII public screen locking and DrawInfo access.
+//!
+//! [`PubScreen`] wraps `LockPubScreen`/`UnlockPubScreen` with RAII.
+//! [`AmigaDrawInfo`] borrows the parent screen via a lifetime parameter,
+//! ensuring the DrawInfo is freed before the screen is unlocked.
+
 use crate::error::{AmigaError, Result};
 use amigaos4_sys::{DrawInfo, Screen, CONST_STRPTR};
 
@@ -31,6 +37,7 @@ impl PubScreen {
         }
     }
 
+    /// Get the raw `Screen` pointer.
     #[inline]
     pub fn as_ptr(&self) -> *mut Screen {
         self.ptr
@@ -52,6 +59,7 @@ pub struct AmigaDrawInfo<'a> {
 }
 
 impl<'a> AmigaDrawInfo<'a> {
+    /// Get the raw `DrawInfo` pointer.
     #[inline]
     pub fn as_ptr(&self) -> *mut DrawInfo {
         self.ptr

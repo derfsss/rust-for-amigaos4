@@ -746,3 +746,33 @@ pub struct xadFileInfo { _opaque: [u8; 0] }
 #[repr(C)]
 pub struct xadSystemInfo { _opaque: [u8; 0] }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use core::mem;
+
+    #[test]
+    fn tag_item_size_is_8() {
+        assert_eq!(mem::size_of::<TagItem>(), 8);
+    }
+
+    #[test]
+    fn tag_item_alignment_is_4() {
+        assert_eq!(mem::align_of::<TagItem>(), 4);
+    }
+
+    #[test]
+    fn tag_done_is_zero() {
+        assert_eq!(TAG_DONE, 0);
+    }
+
+    #[test]
+    fn tag_user_is_high_bit() {
+        assert_eq!(TAG_USER, 0x80000000);
+    }
+
+    #[test]
+    fn tag_ignore_value() {
+        assert_eq!(TAG_IGNORE, 1);
+    }
+}

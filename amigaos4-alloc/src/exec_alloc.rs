@@ -18,6 +18,17 @@ use amigaos4_sys::{IExec, TagItem, TAG_DONE, AVT_TYPE, MEMF_PRIVATE};
 /// IExec must be initialized before any allocation.
 pub struct ExecAllocator;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use core::mem;
+
+    #[test]
+    fn exec_allocator_is_zst() {
+        assert_eq!(mem::size_of::<ExecAllocator>(), 0);
+    }
+}
+
 unsafe impl GlobalAlloc for ExecAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let iexec = unsafe { IExec };
@@ -39,7 +50,10 @@ unsafe impl GlobalAlloc for ExecAllocator {
             // Over-allocate for unusual alignment (>16 bytes).
             // Store the original pointer just before the aligned region.
             let overhead = layout.align() + core::mem::size_of::<usize>();
-            let total = layout.size() + overhead;
+            let total = match layout.size().checked_add(overhead) {
+                Some(t) => t,
+                None => return core::ptr::null_mut(),
+            };
             let tags = [
                 TagItem { ti_Tag: AVT_TYPE, ti_Data: MEMF_PRIVATE },
                 TagItem { ti_Tag: TAG_DONE, ti_Data: 0 },

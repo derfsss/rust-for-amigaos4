@@ -1,3 +1,11 @@
+//! Environment variable and working directory access via clib4 (application mode only).
+//!
+//! [`current_dir`] returns the working directory. [`var`] reads an
+//! environment variable by name. Both return `Vec<u8>` (not Rust strings,
+//! since AmigaOS paths are not necessarily UTF-8).
+//!
+//! Requires the `env` feature (enabled by default via `app`).
+
 use alloc::vec::Vec;
 use crate::error::{AmigaError, Result};
 
@@ -28,10 +36,12 @@ pub fn var(name: &[u8]) -> Option<Vec<u8>> {
     if ptr.is_null() {
         None
     } else {
-        // Read the C string
+        // Read the C string with a safety limit to prevent runaway reads.
+        // Environment variable values are bounded by AmigaOS (typically < 4KB).
+        const MAX_ENV_LEN: usize = 8192;
         let mut len = 0usize;
         unsafe {
-            while *ptr.add(len) != 0 {
+            while len < MAX_ENV_LEN && *ptr.add(len) != 0 {
                 len += 1;
             }
         }

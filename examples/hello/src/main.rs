@@ -11,29 +11,22 @@
 extern crate alloc;
 
 use core::panic::PanicInfo;
-use amigaos4_sys::*;
 use amigaos4_alloc::Clib4Allocator;
 
 #[global_allocator]
 static ALLOCATOR: Clib4Allocator = Clib4Allocator;
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    unsafe { amiga_debug_str(b"PANIC!\n\0".as_ptr()); }
-    loop { core::hint::spin_loop(); }
+fn panic(info: &PanicInfo) -> ! {
+    amigaos4::panic::default_panic_handler(info)
 }
 
 #[no_mangle]
 pub extern "C" fn main(_argc: i32, _argv: *const *const u8) -> i32 {
-    unsafe {
-        amiga_debug_str(b"Hello from Rust on AmigaOS 4!\n\0".as_ptr());
-    }
+    amigaos4::serial_println!("Hello from Rust on AmigaOS 4!");
 
-    // Vec, String, format! all work via Clib4Allocator (malloc/free)
     let v = alloc::vec![1u32, 2, 3];
-    unsafe {
-        amiga_debug_fmt_u32(b"Vec has %lu elements\n\0".as_ptr(), v.len() as u32);
-    }
+    amigaos4::serial_println!("Vec has {} elements", v.len());
 
     0
 }

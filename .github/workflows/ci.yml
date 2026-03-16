@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Toolchain ────────────────────────────────────────────────
+      - name: Install Rust nightly + rust-src
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+
+      - name: Rust version
+        run: rustc +nightly --version && cargo +nightly --version
+
+      # ── Fake linker ──────────────────────────────────────────────
+      # The target spec references fake-linker.bat (Windows).
+      # On Linux CI we need fake-linker.sh — make it executable and
+      # patch every powerpc-amigaos.json to point to it.
+      - name: Prepare fake linker for Linux
+        run: |
+          find . -name 'fake-linker.sh' -exec chmod +x {} +
+          find . -name 'powerpc-amigaos.json' -exec \
+            sed -i 's|"linker": "fake-linker.bat"|"linker": "./fake-linker.sh"|' {} +
+
+      # ── Library crates (cross-compiled to PPC) ───────────────────
+      # These have no Cargo.toml of their own that sets up build-std;
+      # build them as dependencies by using an example project's
+      # .cargo/config.toml which enables build-std + json-target-spec.
+      - name: Build amigaos4-sys (PPC)
+        working-directory: examples/hello
+        run: cargo +nightly build --release -p amigaos4-sys
+
+      - name: Build amigaos4-alloc (PPC)
+        working-directory: examples/hello
+        run: cargo +nightly build --release -p amigaos4-alloc
+
+      - name: Build amigaos4 (PPC)
+        working-directory: examples/hello
+        run: cargo +nightly build --release -p amigaos4
+
+      # ── Example projects (cross-compiled to PPC) ─────────────────
+      - name: Build examples/hello (PPC)
+        working-directory: examples/hello
+        run: cargo +nightly build --release
+
+      - name: Build examples/hello-driver (PPC)
+        working-directory: examples/hello-driver
+        run: cargo +nightly build --release
+
+      - name: Build examples/test-harness (PPC)
+        working-directory: examples/test-harness
+        run: cargo +nightly build --release
+
+      - name: Build examples/file-io-demo (PPC)
+        working-directory: examples/file-io-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/timer-demo (PPC)
+        working-directory: examples/timer-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/thread-demo (PPC)
+        working-directory: examples/thread-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/gui-demo (PPC)
+        working-directory: examples/gui-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/net-demo (PPC)
+        working-directory: examples/net-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/async-demo (PPC)
+        working-directory: examples/async-demo
+        run: cargo +nightly build --release
+
+      - name: Build examples/test-harness-gui (PPC)
+        working-directory: examples/test-harness-gui
+        run: cargo +nightly build --release
+
+      - name: Build examples/test-harness-net (PPC)
+        working-directory: examples/test-harness-net
+        run: cargo +nightly build --release
+
+      - name: Build examples/hello-library (PPC)
+        working-directory: examples/hello-library
+        run: cargo +nightly build --release
+
+      # ── Host-side tests ──────────────────────────────────────────
+      # Run unit / integration tests for the amigaos4 crate on the
+      # host (x86_64), testing pure-Rust logic only — no PPC, no
+      # cross-compilation.
+      - name: Test amigaos4 (host)
+        working-directory: amigaos4
+        run: cargo +nightly test
+
+      - name: Test amigaos4-sys (host)
+        working-directory: amigaos4-sys
+        run: cargo +nightly test
+
+      - name: Test amigaos4-alloc (host)
+        working-directory: amigaos4-alloc
+        run: cargo +nightly test --features exec

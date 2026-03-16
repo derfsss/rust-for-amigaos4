@@ -1,3 +1,11 @@
+//! File I/O via clib4 POSIX functions (application mode only).
+//!
+//! Provides [`File`] (RAII file handle), plus convenience functions
+//! [`read_to_vec`], [`write_file`], [`remove_file`], [`create_dir`],
+//! and [`metadata`]. All path arguments must be null-terminated byte slices.
+//!
+//! Requires the `fs` feature (enabled by default via `app`).
+
 use alloc::vec::Vec;
 use crate::error::{AmigaError, Result};
 use crate::io;
@@ -137,10 +145,17 @@ impl Drop for File {
 pub fn read_to_vec(path: &[u8]) -> Result<Vec<u8>> {
     use crate::io::Read;
     // Get file size via stat
-    let size = metadata(path)?.size() as usize;
+    let raw_size = metadata(path)?.size();
+    if raw_size < 0 || raw_size as u64 > usize::MAX as u64 {
+        return Err(AmigaError::IoError(0));
+    }
+    let size = raw_size as usize;
     let mut file = File::open(path)?;
     let mut buf = Vec::with_capacity(size);
-    // Safety: we'll read into the spare capacity
+    // SAFETY: We set len to the expected file size then immediately read into
+    // the buffer. If less than `size` bytes are read, `buf.truncate(total)`
+    // below shrinks the length so no uninitialized bytes are exposed. The
+    // read destination is valid allocated memory from `with_capacity(size)`.
     unsafe { buf.set_len(size); }
     let mut total = 0;
     while total < size {
