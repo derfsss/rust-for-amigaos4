@@ -19,7 +19,7 @@ RUST_LIB  = target/powerpc-amigaos/release/libhello.a
 CFLAGS    = -mcrt=clib4 -O2 -Wall -I$(SDK_INC)
 
 # Linker flags
-LDFLAGS   = -mcrt=clib4 -Wl,--gc-sections -s
+LDFLAGS   = -mcrt=clib4 -Wl,--gc-sections
 LIBS      = -lpthread -lauto
 
 .PHONY: all clean
