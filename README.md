@@ -38,7 +38,7 @@ This project was developed and tested with the following exact versions. **Other
 | Rust | `nightly-2026-03-01` | Pinned in `rust-toolchain.toml` (nightly required for `-Zbuild-std`) |
 | AmigaOS SDK | `54.16 (22.08.2022)` | AmigaOS 4.1 Final Edition SDK |
 | Cross-compiler | `ppc-amigaos-gcc 11.5.0` (adtools build) | Inside Docker image |
-| C library | `clib4` commit `0d5fe579` (2026-01-28) | Source pinned as submodule in `clib4-src/`; pre-built binaries in `clib4-nightly/` overlay at link time |
+| C library | `clib4` commit `778afb03` (2026-05-14, upstream `development` / `nightly`) | Source pinned as submodule in `clib4-src/`; pre-built binaries in `clib4-nightly/` overlay at link time |
 | Docker image | `walkero/amigagccondocker:os4-gcc11` (built 2025-08-18) | Contains GCC + SDK + clib4 |
 | QEMU | `qemu-system-ppc -M amigaone` | Test target |
 
@@ -68,7 +68,7 @@ git clone --recurse-submodules https://github.com/<user>/rust-for-amigaos4.git
 git submodule update --init --recursive
 ```
 
-The `clib4-src/` submodule pins the exact clib4 source (commit `0d5fe579`) the pre-built `clib4-nightly/` binaries were produced from. Checkout is required for reproducible local rebuilds; it is not needed to run `build.sh`, which uses the pre-built binaries directly.
+The `clib4-src/` submodule pins the exact clib4 source (commit `778afb03`, tip of the upstream `development` branch) the pre-built `clib4-nightly/` binaries were produced from. Checkout is required for reproducible local rebuilds; it is not needed to run `build.sh`, which uses the pre-built binaries directly.
 
 ### 2. Run Setup
 
@@ -129,7 +129,7 @@ cp -r /repo/clib4-nightly/lib/*     /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/lib/
 cp -r /repo/clib4-nightly/include/* /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include/
 ```
 
-You do not need to install anything into the Docker image yourself — the overlay is applied by the build script. The clib4 binaries that ship in `clib4-nightly/` are reproducible from the `clib4-src/` submodule at commit `0d5fe579` (see "Rebuilding clib4" below).
+You do not need to install anything into the Docker image yourself — the overlay is applied by the build script. The clib4 binaries that ship in `clib4-nightly/` are reproducible from the `clib4-src/` submodule at commit `778afb03` (see "Rebuilding clib4" below).
 
 If you want to **replace** the overlaid clib4 with your own build, drop new `lib/`, `include/`, and `clib4.library` / `clib4.library.debug` files into `clib4-nightly/` and re-run `./build.sh <project>`. Nothing else needs to change.
 
@@ -187,7 +187,7 @@ rust-for-amigaos4/
   amigaos4-alloc/     Global allocator backends (Clib4Allocator, ExecAllocator)
   amigaos4/           Safe wrappers: 25 modules (GUI, networking, async, DOS, timer, clipboard, POSIX)
   clib4-nightly/      Pre-built clib4 C library overlay (binaries only)
-  clib4-src/          clib4 source pinned via submodule at commit 0d5fe579
+  clib4-src/          clib4 source pinned via submodule at commit 778afb03 (development tip)
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01) used for all builds
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates

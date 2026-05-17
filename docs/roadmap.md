@@ -25,7 +25,7 @@ Last updated: 2026-04-14 (post-Phase-10 hardening)
 ## Post-Phase-10 — Reproducibility & Real-Hardware Prep **[COMPLETE]**
 
 - [x] **Rust toolchain pin** — `rust-toolchain.toml` fixes every cargo invocation to `nightly-2026-03-01`. `+nightly` overrides removed from `build.sh`, `build.bat`, `setup.sh`, `setup.bat`, CI workflow, and README examples.
-- [x] **clib4 source submodule** — `clib4-src/` added as a submodule of `AmigaLabs/clib4` pinned at commit `0d5fe579`. Reproduces `clib4-nightly/clib4.library` at the same size when rebuilt in Docker with `gmake -f GNUmakefile.os4`. Version string matches the shipped binary's `clib4.library 2.1`.
+- [x] **clib4 source submodule** — `clib4-src/` added as a submodule of `AmigaLabs/clib4`, tracking the upstream `development` branch (currently pinned at commit `778afb03`, tagged `nightly`). Reproduces `clib4-nightly/clib4.library` when rebuilt in Docker with `gmake -f GNUmakefile.os4`. Version string matches the shipped binary's `clib4.library 2.1`.
 - [x] **Line-ending normalisation** — `.gitattributes` enforces LF for `*.sh`/`*.rs`/`*.toml`/`*.c`/`*.h` and CRLF for `*.bat`. All shell scripts converted to LF so `/bin/sh` can execute them under Linux.
 - [x] **Upstream link correction** — README now points to `github.com/AmigaLabs/clib4` (the `afxgroup/clib4` URL 404s).
 - [x] **Shared-library example fixes**:
