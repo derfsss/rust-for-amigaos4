@@ -30,6 +30,4 @@ cargo test --features link-amigaos4
 
 ## Known limitations
 
-**Windows host**: `cargo test` on the `amigaos4` crate currently fails to link with unresolved externs for `IExec`, `IDOS`, `IIntuition`, `ILocale`, `clock_gettime`, `close`. Linux GNU ld resolves these lazily so CI passes; Windows MSVC linker is strict and rejects them at link time. Until the AmigaOS-only wrappers are gated behind `#[cfg(target_os = "amigaos")]`, the orchestrator skips that step on Windows and reports it as a known gap, not a failure.
-
 **No QEMU layer**: Target-side test harnesses (`examples/test-harness*`) are still cross-compiled to PowerPC and intended to be run on QEMU or real hardware. The Tests/ orchestrator does not drive QEMU today.

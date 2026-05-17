@@ -10,8 +10,21 @@
 //! Target-side cross-compile tests (`examples/test-harness*`) and QEMU
 //! smoke tests are out of scope for this orchestrator.
 
-use amiga_tests::{cargo_test_in, is_windows_host, repo_root, strip_ansi};
-use std::process::ExitCode;
+use amiga_tests::{repo_root, strip_ansi};
+use std::process::{Command, ExitCode};
+
+/// Build a `cargo` command with the parent process's CARGO_* environment
+/// variables stripped so the child invocation doesn't inherit a target
+/// directory, manifest, or feature set from whatever launched us.
+fn clean_cargo_command() -> Command {
+    let mut cmd = Command::new("cargo");
+    for (k, _) in std::env::vars() {
+        if k.starts_with("CARGO_") || k == "RUSTC_WRAPPER" || k == "RUSTFLAGS" {
+            cmd.env_remove(k);
+        }
+    }
+    cmd
+}
 
 struct StepResult {
     name: &'static str,
@@ -22,7 +35,6 @@ struct StepResult {
 enum StepStatus {
     Passed,
     Failed,
-    Skipped,
 }
 
 impl StepStatus {
@@ -30,7 +42,6 @@ impl StepStatus {
         match self {
             StepStatus::Passed => "PASS",
             StepStatus::Failed => "FAIL",
-            StepStatus::Skipped => "SKIP",
         }
     }
 }
@@ -57,26 +68,28 @@ fn main() -> ExitCode {
 
     let mut passed = 0;
     let mut failed = 0;
-    let mut skipped = 0;
     for r in &results {
         println!("  [{}] {}  — {}", r.status.glyph(), r.name, r.detail);
         match r.status {
             StepStatus::Passed => passed += 1,
             StepStatus::Failed => failed += 1,
-            StepStatus::Skipped => skipped += 1,
         }
     }
     println!();
-    println!("  total: {} passed, {} failed, {} skipped",
-             passed, failed, skipped);
+    println!("  total: {} step(s) passed, {} failed", passed, failed);
 
     if failed > 0 { ExitCode::from(1) } else { ExitCode::SUCCESS }
 }
 
 fn run_self_tests() -> StepResult {
     println!("── Tests/ integration tests ──");
-    let out = std::process::Command::new("cargo")
+    // Use a sibling target directory so the inner cargo test doesn't
+    // try to rebuild this orchestrator binary in target/debug/
+    // (which is locked by Windows while it's running).
+    let sub_target = repo_root().join("Tests").join("target-sub");
+    let out = clean_cargo_command()
         .args(["test", "--no-fail-fast"])
+        .arg("--target-dir").arg(&sub_target)
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
         .expect("failed to spawn cargo test in Tests/");
@@ -96,15 +109,11 @@ fn run_self_tests() -> StepResult {
 
 fn run_in_crate_tests(crate_dir: &'static str) -> StepResult {
     println!("── in-crate tests: {} ──", crate_dir);
-    // Known Windows linker issue with amigaos4 — see Tests/README.md.
-    if is_windows_host() && crate_dir == "amigaos4" {
-        let detail = "skipped on Windows host (unresolved IExec/IDOS/IIntuition \
-                      globals — Linux CI links these lazily)".to_string();
-        println!("  SKIP: {}", detail);
-        return StepResult { name: crate_name(crate_dir), status: StepStatus::Skipped, detail };
-    }
-
-    let out = cargo_test_in(crate_dir);
+    let out = clean_cargo_command()
+        .args(["test", "--no-fail-fast"])
+        .current_dir(repo_root().join(crate_dir))
+        .output()
+        .unwrap_or_else(|e| panic!("failed to run cargo test in {}: {}", crate_dir, e));
     let stdout = strip_ansi(&String::from_utf8_lossy(&out.stdout));
     let stderr = strip_ansi(&String::from_utf8_lossy(&out.stderr));
     print!("{}", stdout);

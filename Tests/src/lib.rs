@@ -42,13 +42,6 @@ pub fn cargo_test_in(crate_dir: &str) -> Output {
         .unwrap_or_else(|e| panic!("failed to run cargo test in {}: {}", crate_dir, e))
 }
 
-/// True when the host appears to be Windows. Some in-crate `cargo test`
-/// invocations are known to fail on Windows (see Tests/README.md); the
-/// orchestrator uses this to skip with a clear message instead of failing.
-pub fn is_windows_host() -> bool {
-    cfg!(target_os = "windows")
-}
-
 /// Read a binary file's size in bytes (panics on I/O error).
 pub fn file_size(path: impl AsRef<Path>) -> u64 {
     std::fs::metadata(path.as_ref())

@@ -18,10 +18,10 @@ path = "src/main.rs"
 # and inspect file contents to verify project invariants.
 
 [features]
-default = []
-# `link-amigaos4` enables Rust integration tests that import amigaos4 as a
-# path dep. Off by default because on Windows the link fails (unresolved
-# IExec/IDOS/etc. globals); CI on Linux can enable it.
+default = ["link-amigaos4"]
+# `link-amigaos4` enables Rust integration tests that import amigaos4
+# as a path dep. On by default; disable with --no-default-features in
+# environments where the amigaos4 path deps aren't desired.
 link-amigaos4 = ["dep:amigaos4", "dep:amigaos4-sys"]
 
 [dependencies.amigaos4]

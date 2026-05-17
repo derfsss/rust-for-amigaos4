@@ -22,3 +22,7 @@ Thumbs.db
 # repo). This pattern also keeps any in-repo tmp/ accidentally created
 # from being tracked.
 tmp/
+
+# Tests/ orchestrator's sibling target dir (used to avoid Windows file
+# locks when the runner spawns cargo test on itself).
+Tests/target-sub/
