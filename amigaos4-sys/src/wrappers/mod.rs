@@ -22,6 +22,8 @@ pub mod clicktab;
 pub mod colorwheel;
 #[cfg(feature = "commodities")]
 pub mod commodities;
+#[cfg(feature = "console")]
+pub mod console;
 #[cfg(feature = "datatypes")]
 pub mod datatypes;
 #[cfg(feature = "datebrowser")]
@@ -40,6 +42,8 @@ pub mod fuelgauge;
 pub mod gadtools;
 #[cfg(feature = "graphics")]
 pub mod graphics;
+#[cfg(feature = "hunk")]
+pub mod hunk;
 #[cfg(feature = "icon")]
 pub mod icon;
 #[cfg(feature = "iffparse")]
@@ -64,10 +68,14 @@ pub mod locale;
 pub mod lowlevel;
 #[cfg(feature = "misc")]
 pub mod misc;
+#[cfg(feature = "nv")]
+pub mod nv;
 #[cfg(feature = "palette")]
 pub mod palette;
 #[cfg(feature = "penmap")]
 pub mod penmap;
+#[cfg(feature = "picture")]
+pub mod picture;
 #[cfg(feature = "popupmenu")]
 pub mod popupmenu;
 #[cfg(feature = "radiobutton")]
@@ -92,6 +100,8 @@ pub mod space;
 pub mod texteditor;
 #[cfg(feature = "timer")]
 pub mod timer;
+#[cfg(feature = "timezone")]
+pub mod timezone;
 #[cfg(feature = "utility")]
 pub mod utility;
 #[cfg(feature = "version")]

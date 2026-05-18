@@ -142,13 +142,14 @@ fn is_base_interface_method(name: &str) -> bool {
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
     "application", "asl", "bevel", "bullet", "button", "checkbox", "chooser",
-    "clicktab", "colorwheel", "commodities", "datatypes", "datebrowser",
-    "diskfont", "dos", "exec", "filler", "fuelgauge", "gadtools", "graphics",
-    "icon", "iffparse", "input", "integer", "intuition", "keymap", "label",
-    "layers", "layout", "locale", "lowlevel", "misc", "palette", "penmap",
-    "popupmenu", "radiobutton", "realtime", "requester", "resource", "rexxsys",
-    "scroller", "slider", "space", "speedbar", "texteditor", "timer",
-    "utility", "version", "workbench",
+    "clicktab", "colorwheel", "commodities", "console", "datatypes",
+    "datebrowser", "diskfont", "dos", "exec", "filler", "fuelgauge",
+    "gadtools", "graphics", "hunk", "icon", "iffparse", "input", "integer",
+    "intuition", "keymap", "label", "layers", "layout", "locale", "lowlevel",
+    "misc", "nv", "palette", "penmap", "picture", "popupmenu", "radiobutton",
+    "realtime", "requester", "resource", "rexxsys", "scroller", "slider",
+    "space", "speedbar", "texteditor", "timer", "timezone", "utility",
+    "version", "workbench",
 ];
 
 /// One row of the audit table: which wrapper we expected for which
