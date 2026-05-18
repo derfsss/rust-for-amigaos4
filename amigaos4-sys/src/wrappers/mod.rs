@@ -246,6 +246,8 @@ pub mod virtual_gc;
 pub mod window;
 #[cfg(feature = "workbench")]
 pub mod workbench;
+#[cfg(feature = "xadmaster")]
+pub mod xadmaster;
 #[cfg(feature = "xena")]
 pub mod xena;
 #[cfg(feature = "z")]

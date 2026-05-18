@@ -161,7 +161,8 @@ const INTERFACES: &[&str] = &[
     "resource", "rexxsys", "screenblanker", "scroller", "sketchboard",
     "slider", "space", "speedbar", "string_gc", "textclip", "texteditor",
     "timer", "timesync", "timezone", "usbfd", "usbhcd", "usbresource",
-    "utility", "version", "virtual_gc", "window", "workbench", "xena", "z",
+    "utility", "version", "virtual_gc", "window", "workbench",
+    "xadmaster", "xena", "z",
 ];
 
 /// One row of the audit table: which wrapper we expected for which

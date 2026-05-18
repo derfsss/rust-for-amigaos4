@@ -156,6 +156,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("virtual_gc", "VirtualIFace", Some("virtual")),
     ("window", "WindowIFace", None),
     ("workbench", "WorkbenchIFace", Some("wb")),
+    ("xadmaster", "XadMasterIFace", None),
     ("xena", "XenaIFace", None),
     ("z", "ZIFace", None),
 ];
