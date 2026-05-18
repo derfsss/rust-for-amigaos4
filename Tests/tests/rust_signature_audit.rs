@@ -160,7 +160,7 @@ const INTERFACES: &[&str] = &[
     "radiobutton", "ramdrive", "realtime", "requester",
     "resource", "rexxsys", "screenblanker", "scroller", "sketchboard",
     "slider", "space", "speedbar", "string_gc", "textclip", "texteditor",
-    "timer", "timesync", "timezone", "usbfd", "usbhcd", "usbresource",
+    "timer", "timesync", "timezone", "usbfd", "usbhcd", "usbresource", "usbsys",
     "utility", "version", "virtual_gc", "window", "workbench",
     "xadmaster", "xena", "z",
 ];

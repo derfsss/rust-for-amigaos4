@@ -151,6 +151,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("usbfd", "USBFDIFace", None),
     ("usbhcd", "USBHCDIFace", None),
     ("usbresource", "USBResourceIFace", None),
+    ("usbsys", "USBSysIFace", None),
     ("utility", "UtilityIFace", None),
     ("version", "VersionIFace", None),
     ("virtual_gc", "VirtualIFace", Some("virtual")),

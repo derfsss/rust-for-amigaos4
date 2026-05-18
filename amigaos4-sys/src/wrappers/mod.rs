@@ -236,6 +236,8 @@ pub mod usbfd;
 pub mod usbhcd;
 #[cfg(feature = "usbresource")]
 pub mod usbresource;
+#[cfg(feature = "usbsys")]
+pub mod usbsys;
 #[cfg(feature = "utility")]
 pub mod utility;
 #[cfg(feature = "version")]
