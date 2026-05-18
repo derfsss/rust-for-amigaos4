@@ -4,6 +4,10 @@
 
 #[cfg(feature = "acpi")]
 pub mod acpi;
+#[cfg(feature = "amigaguide")]
+pub mod amigaguide;
+#[cfg(feature = "amigainput")]
+pub mod amigainput;
 #[cfg(feature = "application")]
 pub mod application;
 #[cfg(feature = "arexx")]
@@ -28,6 +32,10 @@ pub mod bullet;
 pub mod button;
 #[cfg(feature = "bzip2")]
 pub mod bzip2;
+#[cfg(feature = "card")]
+pub mod card;
+#[cfg(feature = "catweasel")]
+pub mod catweasel;
 #[cfg(feature = "checkbox")]
 pub mod checkbox;
 #[cfg(feature = "chooser")]
@@ -178,6 +186,8 @@ pub mod timesync;
 pub mod timezone;
 #[cfg(feature = "usbfd")]
 pub mod usbfd;
+#[cfg(feature = "usbhcd")]
+pub mod usbhcd;
 #[cfg(feature = "utility")]
 pub mod utility;
 #[cfg(feature = "version")]

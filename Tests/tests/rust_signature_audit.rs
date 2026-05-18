@@ -141,9 +141,11 @@ fn is_base_interface_method(name: &str) -> bool {
 /// interfaces/ (uppercase mapping handled by parsing the struct decl
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
-    "acpi", "application", "arexx", "asl", "battclock", "battmem", "bevel",
-    "bitmap_gc", "bootsd", "btree", "bullet", "button", "bzip2", "checkbox",
-    "chooser", "cia", "clicktab", "colorwheel", "commodities",
+    "acpi", "amigaguide", "amigainput", "application", "arexx", "asl",
+    "battclock", "battmem", "bevel",
+    "bitmap_gc", "bootsd", "btree", "bullet", "button", "bzip2", "card",
+    "catweasel", "checkbox", "chooser", "cia", "clicktab", "colorwheel",
+    "commodities",
     "console", "datatypes", "datebrowser", "debug", "diffview", "diskfont",
     "diskio", "docky", "dos", "drawlist", "elf", "exec", "expansion",
     "filler", "fsldma",
@@ -158,7 +160,7 @@ const INTERFACES: &[&str] = &[
     "resource", "rexxsys", "screenblanker", "scroller", "sketchboard",
     "slider", "space", "speedbar", "string_gc", "textclip", "texteditor",
     "timer",
-    "timesync", "timezone", "usbfd",
+    "timesync", "timezone", "usbfd", "usbhcd",
     "utility", "version", "virtual_gc", "window", "workbench", "xena",
 ];
 

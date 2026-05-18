@@ -40,6 +40,8 @@ fn sdk_interfaces_dir() -> Option<PathBuf> {
 /// SDK filename matches the Rust basename unless explicitly overridden.
 const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("acpi", "ACPIIFace", None),
+    ("amigaguide", "AmigaGuideIFace", None),
+    ("amigainput", "AIN_IFace", None),
     ("application", "ApplicationIFace", None),
     ("arexx", "ARexxIFace", None),
     ("asl", "AslIFace", None),
@@ -52,6 +54,8 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("bullet", "BulletIFace", None),
     ("button", "ButtonIFace", None),
     ("bzip2", "BZip2IFace", None),
+    ("card", "CardIFace", Some("cardres")),
+    ("catweasel", "CWIFace", None),
     ("checkbox", "CheckBoxIFace", None),
     ("chooser", "ChooserIFace", None),
     ("cia", "CIAIFace", None),
@@ -127,6 +131,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("timesync", "TimesyncIFace", None),
     ("timezone", "TimezoneIFace", None),
     ("usbfd", "USBFDIFace", None),
+    ("usbhcd", "USBHCDIFace", None),
     ("utility", "UtilityIFace", None),
     ("version", "VersionIFace", None),
     ("virtual_gc", "VirtualIFace", Some("virtual")),
