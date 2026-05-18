@@ -144,7 +144,7 @@ const INTERFACES: &[&str] = &[
     "acpi", "ahi", "ahisub", "amigaguide", "amigainput", "amisslmaster",
     "application", "arexx", "asl", "battclock", "battmem", "bevel",
     "bitmap_gc", "blankermodule", "bootsd", "btree", "bullet", "button",
-    "bzip2", "camd_driver", "card", "catweasel", "checkbox", "chooser", "cia",
+    "bzip2", "camd", "camd_driver", "card", "catweasel", "checkbox", "chooser", "cia",
     "charset", "clicktab", "colorwheel", "commodities", "console",
     "cw3_floppy", "cw3_gameport", "cw3_keyboard", "cw3_sid", "cyrus",
     "datatypes",

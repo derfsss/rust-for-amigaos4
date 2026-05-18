@@ -58,6 +58,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("bullet", "BulletIFace", None),
     ("button", "ButtonIFace", None),
     ("bzip2", "BZip2IFace", None),
+    ("camd", "CamdIFace", None),
     ("camd_driver", "CamdDriverIFace", Some("camddriver")),
     ("card", "CardIFace", Some("cardres")),
     ("catweasel", "CWIFace", None),

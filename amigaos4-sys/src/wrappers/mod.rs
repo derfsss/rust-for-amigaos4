@@ -40,6 +40,8 @@ pub mod bullet;
 pub mod button;
 #[cfg(feature = "bzip2")]
 pub mod bzip2;
+#[cfg(feature = "camd")]
+pub mod camd;
 #[cfg(feature = "camd_driver")]
 pub mod camd_driver;
 #[cfg(feature = "card")]
