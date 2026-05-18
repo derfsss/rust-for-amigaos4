@@ -41,6 +41,7 @@ fn sdk_interfaces_dir() -> Option<PathBuf> {
 const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("application", "ApplicationIFace", None),
     ("asl", "AslIFace", None),
+    ("bevel", "BevelIFace", None),
     ("commodities", "CommoditiesIFace", None),
     ("datatypes", "DataTypesIFace", None),
     ("diskfont", "DiskfontIFace", None),
@@ -65,10 +66,19 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("workbench", "WorkbenchIFace", Some("wb")),
 ];
 
-/// Base methods inherited from the Interface framework; the SDK header
-/// declares them, but they have no corresponding user-callable wrapper.
+/// Base methods inherited from the Interface framework, plus
+/// `Reserved<N>` placeholder slots that several interfaces use. None
+/// have user-callable wrappers.
 fn is_base_method(name: &str) -> bool {
-    matches!(name, "Obtain" | "Release" | "Expunge" | "Clone")
+    if matches!(name, "Obtain" | "Release" | "Expunge" | "Clone") {
+        return true;
+    }
+    if let Some(rest) = name.strip_prefix("Reserved") {
+        if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
+            return true;
+        }
+    }
+    false
 }
 
 // ── SDK header parser ────────────────────────────────────────

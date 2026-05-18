@@ -6,6 +6,8 @@
 pub mod application;
 #[cfg(feature = "asl")]
 pub mod asl;
+#[cfg(feature = "bevel")]
+pub mod bevel;
 #[cfg(feature = "commodities")]
 pub mod commodities;
 #[cfg(feature = "datatypes")]

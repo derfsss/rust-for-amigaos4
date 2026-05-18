@@ -121,15 +121,27 @@ fn parse_wrapper_names(text: &str) -> BTreeSet<String> {
 /// (filtered earlier as `MethodKind::Unimplemented`); some (e.g.
 /// LowLevelIFace) implement them as real entries, which still get
 /// no user-facing wrapper.
+///
+/// `Reserved<N>` (e.g. BevelIFace::Reserved1, CyberGfxIFace::Reserved8)
+/// are fn-typed placeholder slots reserved for future SDK additions —
+/// not user-callable, so also skipped.
 fn is_base_interface_method(name: &str) -> bool {
-    matches!(name, "Obtain" | "Release" | "Expunge" | "Clone")
+    if matches!(name, "Obtain" | "Release" | "Expunge" | "Clone") {
+        return true;
+    }
+    if let Some(rest) = name.strip_prefix("Reserved") {
+        if !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit()) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Interfaces we audit. Filename basename in both wrappers/ and
 /// interfaces/ (uppercase mapping handled by parsing the struct decl
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
-    "application", "asl", "commodities", "datatypes", "diskfont", "dos",
+    "application", "asl", "bevel", "commodities", "datatypes", "diskfont", "dos",
     "exec", "gadtools", "graphics", "icon", "iffparse", "intuition",
     "keymap", "layers", "locale", "lowlevel", "misc", "popupmenu",
     "realtime", "rexxsys", "timer", "utility", "version", "workbench",
