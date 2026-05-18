@@ -39,6 +39,7 @@ fn sdk_interfaces_dir() -> Option<PathBuf> {
 /// `(rust_basename, rust_struct_name, sdk_filename_override)`. The
 /// SDK filename matches the Rust basename unless explicitly overridden.
 const INTERFACES: &[(&str, &str, Option<&str>)] = &[
+    ("acpi", "ACPIIFace", None),
     ("application", "ApplicationIFace", None),
     ("asl", "AslIFace", None),
     ("battclock", "BattClockIFace", None),
@@ -55,10 +56,12 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("console", "ConsoleIFace", None),
     ("datatypes", "DataTypesIFace", None),
     ("datebrowser", "DateBrowserIFace", None),
+    ("debug", "DebugIFace", Some("exec")),
     ("diffview", "DiffViewIFace", None),
     ("diskfont", "DiskfontIFace", None),
     ("diskio", "DiskIOIFace", None),
     ("dos", "DOSIFace", None),
+    ("drawlist", "DrawListIFace", None),
     ("exec", "ExecIFace", None),
     ("expansion", "ExpansionIFace", None),
     ("filler", "FillerIFace", None),
@@ -87,6 +90,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("lowlevel", "LowLevelIFace", None),
     ("lzma", "LZMAIFace", None),
     ("misc", "MiscIFace", None),
+    ("mmu", "MMUIFace", Some("exec")),
     ("mounter", "MounterIFace", None),
     ("nv", "NVIFace", Some("nonvolatile")),
     ("palette", "PaletteIFace", None),
@@ -101,6 +105,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("rexxsys", "RexxSysIFace", Some("rexxsyslib")),
     ("screenblanker", "ScreenBlankerIFace", None),
     ("scroller", "ScrollerIFace", None),
+    ("sketchboard", "SketchBoardIFace", None),
     ("slider", "SliderIFace", None),
     ("space", "SpaceIFace", None),
     ("speedbar", "SpeedBarIFace", None),

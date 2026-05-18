@@ -141,17 +141,19 @@ fn is_base_interface_method(name: &str) -> bool {
 /// interfaces/ (uppercase mapping handled by parsing the struct decl
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
-    "application", "asl", "battclock", "bevel", "bootsd", "bullet", "button",
+    "acpi", "application", "asl", "battclock", "bevel", "bootsd", "bullet", "button",
     "checkbox", "chooser", "cia", "clicktab", "colorwheel", "commodities",
-    "console", "datatypes", "datebrowser", "diffview", "diskfont", "diskio",
-    "dos", "exec", "expansion", "filler", "fsldma", "fuelgauge", "gadtools",
+    "console", "datatypes", "datebrowser", "debug", "diffview", "diskfont",
+    "diskio", "dos", "drawlist", "exec", "expansion", "filler", "fsldma",
+    "fuelgauge", "gadtools",
     "getcolor", "getfile", "getfont", "getscreenmode", "glyph", "graphics",
     "hunk", "i2c", "icon", "iffparse", "input", "integer", "intuition",
     "keymap", "label", "layers", "layout", "listbrowser", "locale",
-    "lowlevel", "misc", "mounter", "nv", "palette", "partition", "penmap",
-    "picture", "popupmenu", "radiobutton", "realtime", "requester",
-    "resource", "rexxsys", "screenblanker", "scroller", "slider", "space",
-    "speedbar", "textclip", "texteditor", "timer", "timesync", "timezone",
+    "lowlevel", "misc", "mmu", "mounter", "nv", "palette", "partition",
+    "penmap", "picture", "popupmenu", "radiobutton", "realtime", "requester",
+    "resource", "rexxsys", "screenblanker", "scroller", "sketchboard",
+    "slider", "space", "speedbar", "textclip", "texteditor", "timer",
+    "timesync", "timezone",
     "utility", "version", "window", "workbench",
 ];
 
