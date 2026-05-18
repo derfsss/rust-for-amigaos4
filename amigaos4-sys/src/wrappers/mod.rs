@@ -38,6 +38,8 @@ pub mod bullet;
 pub mod button;
 #[cfg(feature = "bzip2")]
 pub mod bzip2;
+#[cfg(feature = "camd_driver")]
+pub mod camd_driver;
 #[cfg(feature = "card")]
 pub mod card;
 #[cfg(feature = "catweasel")]
@@ -56,6 +58,14 @@ pub mod colorwheel;
 pub mod commodities;
 #[cfg(feature = "console")]
 pub mod console;
+#[cfg(feature = "cw3_floppy")]
+pub mod cw3_floppy;
+#[cfg(feature = "cw3_gameport")]
+pub mod cw3_gameport;
+#[cfg(feature = "cw3_keyboard")]
+pub mod cw3_keyboard;
+#[cfg(feature = "cw3_sid")]
+pub mod cw3_sid;
 #[cfg(feature = "cyrus")]
 pub mod cyrus;
 #[cfg(feature = "datatypes")]
