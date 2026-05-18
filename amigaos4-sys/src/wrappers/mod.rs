@@ -40,5 +40,7 @@ pub mod rexxsys;
 pub mod timer;
 #[cfg(feature = "utility")]
 pub mod utility;
+#[cfg(feature = "version")]
+pub mod version;
 #[cfg(feature = "workbench")]
 pub mod workbench;

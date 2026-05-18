@@ -58,6 +58,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("rexxsys", "RexxSysIFace", Some("rexxsyslib")),
     ("timer", "TimerIFace", None),
     ("utility", "UtilityIFace", None),
+    ("version", "VersionIFace", None),
     ("workbench", "WorkbenchIFace", Some("wb")),
 ];
 
