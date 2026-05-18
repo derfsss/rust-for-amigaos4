@@ -34,6 +34,8 @@ pub mod layers;
 pub mod locale;
 #[cfg(feature = "lowlevel")]
 pub mod lowlevel;
+#[cfg(feature = "misc")]
+pub mod misc;
 #[cfg(feature = "popupmenu")]
 pub mod popupmenu;
 #[cfg(feature = "rexxsys")]

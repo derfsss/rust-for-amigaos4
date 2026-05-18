@@ -55,6 +55,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("layers", "LayersIFace", None),
     ("locale", "LocaleIFace", None),
     ("lowlevel", "LowLevelIFace", None),
+    ("misc", "MiscIFace", None),
     ("popupmenu", "PopupMenuIFace", None),
     ("rexxsys", "RexxSysIFace", Some("rexxsyslib")),
     ("timer", "TimerIFace", None),
