@@ -33,15 +33,27 @@ pub const LOCK_SAME_VOLUME: i32 = 1;
 pub const LOCK_DIFFERENT: i32 = -1;
 
 // ---- ExamineDir tag constants ----
+//
+// Values come from `dos/dostags.h` and `dos/dos.h` in the AmigaOS 4
+// SDK. The EX_* tag IDs are based at `EX_Dummy = TAG_USER + 6500`,
+// not at TAG_USER+0; an earlier version of this binding used
+// TAG_USER+5/+2 which silently no-op'd and made every ObtainDirContext
+// fail with DOS error 205 (object not found). EXF_ALL similarly
+// must include the V54_SDK bit (1<<16) — the older 0x7F mask only
+// covered the pre-V54 fields.
+
+/// `EX_Dummy = TAG_USER + 6500` — base for the EX_* tag block.
+const EX_DUMMY: u32 = TAG_USER + 6500;
 
 /// Tag: pass a lock (u32 BPTR) as the directory to scan.
-const EX_FILE_LOCK_INPUT: u32 = TAG_USER + 5;
+const EX_FILE_LOCK_INPUT: u32 = EX_DUMMY + 3;
 
 /// Tag: bitmask of which ExamineData fields to populate.
-const EX_DATA_FIELDS: u32 = TAG_USER + 2;
+const EX_DATA_FIELDS: u32 = EX_DUMMY + 10;
 
-/// ExamineData field flag: populate all available fields.
-const EXF_ALL: u32 = 0x7F;
+/// ExamineData field flag: populate all available fields
+/// (`0xFFFF | V54_SDK`).
+const EXF_ALL: u32 = 0xFFFF | (1 << 16);
 
 // ---- AmigaLock ----
 
@@ -293,10 +305,13 @@ mod tests {
 
     #[test]
     fn examine_tag_constants() {
-        // Verify the tag values follow TAG_USER convention.
-        assert_eq!(EX_FILE_LOCK_INPUT, TAG_USER + 5);
-        assert_eq!(EX_DATA_FIELDS, TAG_USER + 2);
-        assert_eq!(EXF_ALL, 0x7F);
+        // Match dos/dostags.h: EX_Dummy = TAG_USER+6500;
+        // EX_FileLockInput = EX_Dummy+3; EX_DataFields = EX_Dummy+10.
+        assert_eq!(EX_DUMMY, TAG_USER + 6500);
+        assert_eq!(EX_FILE_LOCK_INPUT, TAG_USER + 6503);
+        assert_eq!(EX_DATA_FIELDS, TAG_USER + 6510);
+        // EXF_ALL = 0xFFFF | V54_SDK (V54_SDK = 1<<16).
+        assert_eq!(EXF_ALL, 0x1FFFF);
     }
 
     #[test]
