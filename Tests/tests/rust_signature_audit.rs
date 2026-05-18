@@ -141,7 +141,7 @@ fn is_base_interface_method(name: &str) -> bool {
 /// interfaces/ (uppercase mapping handled by parsing the struct decl
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
-    "acpi", "ahi", "ahisub", "amigaguide", "amigainput", "amisslmaster",
+    "acpi", "ahi", "ahisub", "amigaguide", "amigainput", "amissl", "amisslmaster",
     "application", "arexx", "asl", "battclock", "battmem", "bevel",
     "bitmap_gc", "blankermodule", "bootsd", "btree", "bullet", "button",
     "bzip2", "camd", "camd_driver", "card", "catweasel", "checkbox", "chooser", "cia",

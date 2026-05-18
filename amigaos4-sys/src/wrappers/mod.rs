@@ -12,6 +12,8 @@ pub mod ahisub;
 pub mod amigaguide;
 #[cfg(feature = "amigainput")]
 pub mod amigainput;
+#[cfg(feature = "amissl")]
+pub mod amissl;
 #[cfg(feature = "amisslmaster")]
 pub mod amisslmaster;
 #[cfg(feature = "application")]

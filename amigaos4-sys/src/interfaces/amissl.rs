@@ -7010,5 +7010,28 @@ pub struct AmiSSLIFace {
     pub OSSL_AA_DIST_POINT_new: unsafe extern "C" fn(*mut AmiSSLIFace) -> *mut APTR, // 6997: 28048
     pub OSSL_AA_DIST_POINT_it: unsafe extern "C" fn(*mut AmiSSLIFace) -> *const APTR, // 6998: 28052
     pub PEM_ASN1_write_bio_ctx: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut (), *const APTR, *mut APTR, *const (), *const APTR, *const u8, i32, *mut APTR, *mut ()) -> i32, // 6999: 28056
+    pub EVP_PKEY_get_security_category: unsafe extern "C" fn(*mut AmiSSLIFace, *const APTR) -> i32, // 7000: 28060
+    pub X509_STORE_CTX_set_ocsp_resp: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR), // 7001: 28064
+    pub OPENSSL_sk_set_thunks: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, APTR) -> *mut APTR, // 7002: 28068
+    pub i2d_PKCS8PrivateKey: unsafe extern "C" fn(*mut AmiSSLIFace, *const APTR, *mut *mut u8) -> i32, // 7003: 28072
+    pub OSSL_PARAM_set_octet_string_or_ptr: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *const (), u32) -> i32, // 7004: 28076
+    pub OSSL_STORE_LOADER_settable_ctx_params: unsafe extern "C" fn(*mut AmiSSLIFace, *const APTR) -> *const APTR, // 7005: 28080
+    pub X509_CRL_get0_tbs_sigalg: unsafe extern "C" fn(*mut AmiSSLIFace, *const APTR) -> *const APTR, // 7006: 28084
+    pub CMS_RecipientInfo_kemri_cert_cmp: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR) -> i32, // 7007: 28088
+    pub CMS_RecipientInfo_kemri_set0_pkey: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR) -> i32, // 7008: 28092
+    pub CMS_RecipientInfo_kemri_get0_ctx: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR) -> *mut APTR, // 7009: 28096
+    pub CMS_RecipientInfo_kemri_get0_kdf_alg: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR) -> *mut APTR, // 7010: 28100
+    pub CMS_RecipientInfo_kemri_set_ukm: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *const u8, i32) -> i32, // 7011: 28104
+    pub EVP_PKEY_derive_SKEY: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR, *const APTR, *const APTR, u32, *const APTR) -> *mut APTR, // 7012: 28108
+    pub EVP_KDF_CTX_set_SKEY: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR, *const APTR) -> i32, // 7013: 28112
+    pub EVP_KDF_derive_SKEY: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR, *const APTR, *const APTR, u32, *const APTR) -> *mut APTR, // 7014: 28116
+    pub EVP_SKEY_import_SKEYMGMT: unsafe extern "C" fn(*mut AmiSSLIFace, *mut APTR, *mut APTR, i32, *const APTR) -> *mut APTR, // 7015: 28120
+    pub CRYPTO_malloc_array: unsafe extern "C" fn(*mut AmiSSLIFace, u32, u32, *const APTR, i32) -> *mut (), // 7016: 28124
+    pub CRYPTO_calloc: unsafe extern "C" fn(*mut AmiSSLIFace, u32, u32, *const APTR, i32) -> *mut (), // 7017: 28128
+    pub CRYPTO_aligned_alloc_array: unsafe extern "C" fn(*mut AmiSSLIFace, u32, u32, u32, *mut *mut (), *const APTR, i32) -> *mut (), // 7018: 28132
+    pub CRYPTO_realloc_array: unsafe extern "C" fn(*mut AmiSSLIFace, *mut (), u32, u32, *const APTR, i32) -> *mut (), // 7019: 28136
+    pub CRYPTO_clear_realloc_array: unsafe extern "C" fn(*mut AmiSSLIFace, *mut (), u32, u32, u32, *const APTR, i32) -> *mut (), // 7020: 28140
+    pub CRYPTO_secure_malloc_array: unsafe extern "C" fn(*mut AmiSSLIFace, u32, u32, *const APTR, i32) -> *mut (), // 7021: 28144
+    pub CRYPTO_secure_calloc: unsafe extern "C" fn(*mut AmiSSLIFace, u32, u32, *const APTR, i32) -> *mut (), // 7022: 28148
 }
 

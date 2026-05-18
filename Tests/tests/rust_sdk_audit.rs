@@ -44,6 +44,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("ahi", "AHIIFace", None),
     ("amigaguide", "AmigaGuideIFace", None),
     ("amigainput", "AIN_IFace", None),
+    ("amissl", "AmiSSLIFace", None),
     ("amisslmaster", "AmiSSLMasterIFace", None),
     ("application", "ApplicationIFace", None),
     ("arexx", "ARexxIFace", None),
