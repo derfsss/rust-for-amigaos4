@@ -149,7 +149,7 @@ const INTERFACES: &[&str] = &[
     "cw3_floppy", "cw3_gameport", "cw3_keyboard", "cw3_sid", "cybergfx",
     "cyrus", "datatypes",
     "datebrowser", "debug", "diffview", "diskfont", "diskio", "docky", "dos",
-    "drawlist", "dtclass", "elf", "exec", "expansion", "filesysbox",
+    "drawlist", "dtclass", "elf", "exec", "expansion", "expat", "filesysbox",
     "filler", "fsldma", "fuelgauge", "gadtools", "getcolor", "getfile",
     "getfont", "getscreenmode", "glyph", "graphics", "hunk", "i2c",
     "i2c_resource", "icon", "iconmodule", "iffparse", "input", "integer",

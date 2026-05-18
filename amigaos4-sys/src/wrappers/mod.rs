@@ -102,6 +102,8 @@ pub mod elf;
 pub mod exec;
 #[cfg(feature = "expansion")]
 pub mod expansion;
+#[cfg(feature = "expat")]
+pub mod expat;
 #[cfg(feature = "filesysbox")]
 pub mod filesysbox;
 #[cfg(feature = "filler")]

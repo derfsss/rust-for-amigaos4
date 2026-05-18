@@ -85,6 +85,7 @@ const INTERFACES: &[(&str, &str, Option<&str>)] = &[
     ("elf", "ElfIFace", None),
     ("exec", "ExecIFace", None),
     ("expansion", "ExpansionIFace", None),
+    ("expat", "ExpatIFace", None),
     ("filesysbox", "FileSysBoxIFace", None),
     ("filler", "FillerIFace", None),
     ("fsldma", "fslDMAIFace", None),
