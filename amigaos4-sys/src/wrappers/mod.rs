@@ -12,12 +12,16 @@ pub mod arexx;
 pub mod asl;
 #[cfg(feature = "battclock")]
 pub mod battclock;
+#[cfg(feature = "battmem")]
+pub mod battmem;
 #[cfg(feature = "bevel")]
 pub mod bevel;
 #[cfg(feature = "bitmap_gc")]
 pub mod bitmap_gc;
 #[cfg(feature = "bootsd")]
 pub mod bootsd;
+#[cfg(feature = "btree")]
+pub mod btree;
 #[cfg(feature = "bullet")]
 pub mod bullet;
 #[cfg(feature = "button")]
@@ -56,6 +60,8 @@ pub mod diskio;
 pub mod dos;
 #[cfg(feature = "drawlist")]
 pub mod drawlist;
+#[cfg(feature = "elf")]
+pub mod elf;
 #[cfg(feature = "exec")]
 pub mod exec;
 #[cfg(feature = "expansion")]
@@ -134,6 +140,8 @@ pub mod popupmenu;
 pub mod potgo;
 #[cfg(feature = "radiobutton")]
 pub mod radiobutton;
+#[cfg(feature = "ramdrive")]
+pub mod ramdrive;
 #[cfg(feature = "realtime")]
 pub mod realtime;
 #[cfg(feature = "requester")]
@@ -174,6 +182,8 @@ pub mod usbfd;
 pub mod utility;
 #[cfg(feature = "version")]
 pub mod version;
+#[cfg(feature = "virtual_gc")]
+pub mod virtual_gc;
 #[cfg(feature = "window")]
 pub mod window;
 #[cfg(feature = "workbench")]

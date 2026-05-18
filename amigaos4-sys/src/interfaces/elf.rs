@@ -43,5 +43,6 @@ pub struct ElfIFace {
     pub DLOpen: unsafe extern "C" fn(*mut ElfIFace, APTR, CONST_STRPTR, u32) -> APTR, // 30: 180
     pub DLClose: unsafe extern "C" fn(*mut ElfIFace, APTR, APTR) -> APTR, // 31: 184
     pub DLSym: unsafe extern "C" fn(*mut ElfIFace, APTR, APTR, CONST_STRPTR, *mut APTR) -> APTR, // 32: 188
+    pub GetSOHandles: unsafe extern "C" fn(*mut ElfIFace, APTR, *mut Hook) -> i32, // 33: 192
 }
 

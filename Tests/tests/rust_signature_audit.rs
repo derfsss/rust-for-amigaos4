@@ -141,11 +141,12 @@ fn is_base_interface_method(name: &str) -> bool {
 /// interfaces/ (uppercase mapping handled by parsing the struct decl
 /// inside the wrapper file).
 const INTERFACES: &[&str] = &[
-    "acpi", "application", "arexx", "asl", "battclock", "bevel", "bitmap_gc",
-    "bootsd", "bullet", "button", "bzip2", "checkbox", "chooser", "cia",
-    "clicktab", "colorwheel", "commodities",
+    "acpi", "application", "arexx", "asl", "battclock", "battmem", "bevel",
+    "bitmap_gc", "bootsd", "btree", "bullet", "button", "bzip2", "checkbox",
+    "chooser", "cia", "clicktab", "colorwheel", "commodities",
     "console", "datatypes", "datebrowser", "debug", "diffview", "diskfont",
-    "diskio", "docky", "dos", "drawlist", "exec", "expansion", "filler", "fsldma",
+    "diskio", "docky", "dos", "drawlist", "elf", "exec", "expansion",
+    "filler", "fsldma",
     "fuelgauge", "gadtools",
     "getcolor", "getfile", "getfont", "getscreenmode", "glyph", "graphics",
     "hunk", "i2c", "icon", "iconmodule", "iffparse", "input", "integer",
@@ -153,12 +154,12 @@ const INTERFACES: &[&str] = &[
     "keymap", "label", "layers", "layout", "listbrowser", "locale",
     "lowlevel", "misc", "mmu", "mounter", "nv", "palette", "partition",
     "pci", "penmap", "picture", "popupmenu", "potgo", "radiobutton",
-    "realtime", "requester",
+    "ramdrive", "realtime", "requester",
     "resource", "rexxsys", "screenblanker", "scroller", "sketchboard",
     "slider", "space", "speedbar", "string_gc", "textclip", "texteditor",
     "timer",
     "timesync", "timezone", "usbfd",
-    "utility", "version", "window", "workbench", "xena",
+    "utility", "version", "virtual_gc", "window", "workbench", "xena",
 ];
 
 /// One row of the audit table: which wrapper we expected for which

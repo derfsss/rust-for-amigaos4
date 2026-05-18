@@ -239,6 +239,24 @@ fn dos_wrappers_for_backfilled_methods_exist() {
         missing);
 }
 
+// ── elf.library SDK drift (2026-05) ──────────────────────────
+//
+// The SDK's ElfIFace gained `GetSOHandles` at the end of the vtable
+// after the Rust binding was generated. Backfilled at position 33
+// with a wrapper; pin it here so the next regen against a stale SDK
+// doesn't drop it again.
+
+#[test]
+fn elf_iface_has_get_so_handles() {
+    let text = read_repo_file("amigaos4-sys/src/interfaces/elf.rs");
+    assert!(text.contains("pub GetSOHandles:"),
+        "ElfIFace lost backfilled GetSOHandles vtable entry");
+
+    let wrap = read_repo_file("amigaos4-sys/src/wrappers/elf.rs");
+    assert!(wrap.contains("pub unsafe fn elf_get_sohandles("),
+        "wrappers/elf.rs lost the elf_get_sohandles wrapper");
+}
+
 #[test]
 fn dos_cli_init_not_under_private_prefix() {
     // The SDK has always called this method `CliInit`. An older
