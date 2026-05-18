@@ -8,6 +8,8 @@ pub mod acpi;
 pub mod amigaguide;
 #[cfg(feature = "amigainput")]
 pub mod amigainput;
+#[cfg(feature = "amisslmaster")]
+pub mod amisslmaster;
 #[cfg(feature = "application")]
 pub mod application;
 #[cfg(feature = "arexx")]
@@ -22,6 +24,8 @@ pub mod battmem;
 pub mod bevel;
 #[cfg(feature = "bitmap_gc")]
 pub mod bitmap_gc;
+#[cfg(feature = "blankermodule")]
+pub mod blankermodule;
 #[cfg(feature = "bootsd")]
 pub mod bootsd;
 #[cfg(feature = "btree")]
@@ -50,6 +54,8 @@ pub mod colorwheel;
 pub mod commodities;
 #[cfg(feature = "console")]
 pub mod console;
+#[cfg(feature = "cyrus")]
+pub mod cyrus;
 #[cfg(feature = "datatypes")]
 pub mod datatypes;
 #[cfg(feature = "datebrowser")]
@@ -74,6 +80,8 @@ pub mod elf;
 pub mod exec;
 #[cfg(feature = "expansion")]
 pub mod expansion;
+#[cfg(feature = "filesysbox")]
+pub mod filesysbox;
 #[cfg(feature = "filler")]
 pub mod filler;
 #[cfg(feature = "fsldma")]
@@ -140,6 +148,8 @@ pub mod partition;
 pub mod pci;
 #[cfg(feature = "penmap")]
 pub mod penmap;
+#[cfg(feature = "perfmon")]
+pub mod perfmon;
 #[cfg(feature = "picture")]
 pub mod picture;
 #[cfg(feature = "popupmenu")]
