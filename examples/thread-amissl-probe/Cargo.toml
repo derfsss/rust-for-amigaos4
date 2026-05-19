@@ -1,0 +1,27 @@
+[package]
+name = "thread-amissl-probe"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "thread_amissl_probe"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+[dependencies]
+# amissl + amisslmaster needed for the TLS handshake probe;
+# dos needed for stdio probes.
+amigaos4-sys = { path = "../../amigaos4-sys", features = ["exec", "dos", "intuition", "utility", "amissl", "amisslmaster"] }
+amigaos4 = { path = "../../amigaos4" }
+amigaos4-alloc = { path = "../../amigaos4-alloc" }
