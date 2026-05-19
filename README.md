@@ -25,7 +25,7 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **Shared library output** — template with Resident struct, RTF_AUTOINIT, interface vector tables
 - **PPC inline assembly** — cache flush/invalidate, MMIO read/write (8/16/32-bit), memory barriers
 - **~255 tests** — 193 host-side unit/integration tests + 60 target-side integration tests
-- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 12 examples, runs host tests
+- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 19 examples, runs host tests
 
 ---
 
@@ -191,11 +191,14 @@ rust-for-amigaos4/
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01) used for all builds
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates
-  examples/           12 examples (hello, hello-driver, hello-library, test-harness,
+  examples/           19 examples (hello, hello-driver, hello-library, test-harness,
                       test-harness-gui, test-harness-net, file-io-demo, timer-demo,
-                      thread-demo, gui-demo, net-demo, async-demo)
+                      thread-demo, gui-demo, net-demo, async-demo,
+                      thread-amissl-probe, http-client, zlib-roundtrip,
+                      picture-viewer, wbstartup-hello, xadmaster-list,
+                      async-net-echo)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
-  .github/workflows/  CI pipeline (builds all crates + 12 examples, runs host tests)
+  .github/workflows/  CI pipeline (builds all crates + 19 examples, runs host tests)
   cargo-amiga.sh/.bat Project scaffolding and build wrapper
 ```
 

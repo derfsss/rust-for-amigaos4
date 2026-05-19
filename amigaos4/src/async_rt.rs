@@ -121,15 +121,21 @@ impl Executor {
             let made_progress = self.poll_ready_tasks();
 
             if !made_progress && !self.tasks.is_empty() {
-                // Nothing completed and tasks remain — sleep until signaled.
-                // Clear the signal first to avoid a stale wake.
-                unsafe {
-                    amigaos4_sys::exec_set_signal(0, self.signal_mask);
-                    amigaos4_sys::exec_wait(self.signal_mask);
+                // Nothing completed and tasks remain. Peek at our signal
+                // state via SetSignal(0, 0): if a Pending future already
+                // called waker.wake() during this poll round, the bit
+                // is set and we should re-poll immediately instead of
+                // sleeping. This is what makes self-waking futures (e.g.
+                // busy-poll async I/O) actually progress under this
+                // executor — otherwise the bit gets cleared the moment
+                // before we'd wait on it.
+                let current = unsafe { amigaos4_sys::exec_set_signal(0, 0) };
+                if current & self.signal_mask == 0 {
+                    unsafe { amigaos4_sys::exec_wait(self.signal_mask); }
                 }
-
-                // Conservative: mark every pending task as ready because we
-                // do not track which specific task was woken.
+                // Either path lands us here: clear the wake bit and
+                // mark every pending task ready for the next round.
+                unsafe { amigaos4_sys::exec_set_signal(0, self.signal_mask); }
                 for task in &mut self.tasks {
                     task.ready = true;
                 }

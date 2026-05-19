@@ -111,6 +111,27 @@ jobs:
       - name: Build examples/async-demo (link to ELF)
         run: ./build.sh examples/async-demo
 
+      - name: Build examples/thread-amissl-probe (link to ELF)
+        run: ./build.sh examples/thread-amissl-probe
+
+      - name: Build examples/http-client (link to ELF)
+        run: ./build.sh examples/http-client
+
+      - name: Build examples/zlib-roundtrip (link to ELF)
+        run: ./build.sh examples/zlib-roundtrip
+
+      - name: Build examples/picture-viewer (link to ELF)
+        run: ./build.sh examples/picture-viewer
+
+      - name: Build examples/wbstartup-hello (link to ELF)
+        run: ./build.sh examples/wbstartup-hello
+
+      - name: Build examples/xadmaster-list (link to ELF)
+        run: ./build.sh examples/xadmaster-list
+
+      - name: Build examples/async-net-echo (link to ELF)
+        run: ./build.sh examples/async-net-echo
+
       # ── Verify each example produced a PPC ELF ───────────────────
       # Cheap insurance against `make all` silently no-op'ing.
       - name: Verify ELF outputs
@@ -138,6 +159,13 @@ jobs:
           check examples/gui-demo/gui-demo
           check examples/net-demo/net-demo
           check examples/async-demo/async-demo
+          check examples/thread-amissl-probe/thread-amissl-probe
+          check examples/http-client/http-client
+          check examples/zlib-roundtrip/zlib-roundtrip
+          check examples/picture-viewer/picture-viewer
+          check examples/wbstartup-hello/wbstartup-hello
+          check examples/xadmaster-list/xadmaster-list
+          check examples/async-net-echo/async-net-echo
 
       # ── Host-side tests ──────────────────────────────────────────
       # Run unit / integration tests for the amigaos4 crate on the
@@ -183,5 +211,12 @@ jobs:
             examples/gui-demo/gui-demo
             examples/net-demo/net-demo
             examples/async-demo/async-demo
+            examples/thread-amissl-probe/thread-amissl-probe
+            examples/http-client/http-client
+            examples/zlib-roundtrip/zlib-roundtrip
+            examples/picture-viewer/picture-viewer
+            examples/wbstartup-hello/wbstartup-hello
+            examples/xadmaster-list/xadmaster-list
+            examples/async-net-echo/async-net-echo
           if-no-files-found: error
           retention-days: 14

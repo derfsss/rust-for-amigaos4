@@ -31,7 +31,18 @@ extern "C" {
         option_len: u32,
     ) -> i32;
     fn shutdown(socket: i32, how: i32) -> i32;
+    fn fcntl(fd: i32, cmd: i32, arg: i32) -> i32;
 }
+
+// clib4 errno values; EAGAIN/EWOULDBLOCK collapse to the same value.
+const EAGAIN: i32       = 35;
+const EWOULDBLOCK: i32  = EAGAIN;
+const EINPROGRESS: i32  = 36;
+
+// clib4 fcntl.h
+const F_GETFL: i32 = 3;
+const F_SETFL: i32 = 4;
+const O_NONBLOCK: i32 = 0x0004;
 
 fn errno() -> i32 {
     unsafe { *__errno() }
@@ -279,6 +290,58 @@ impl TcpStream {
         self.fd
     }
 
+    /// Switch the socket to non-blocking mode. After this, read/write
+    /// calls return immediately; if no data is available recv() returns
+    /// -1 with errno=EAGAIN/EWOULDBLOCK, send() can return a short
+    /// count, and `try_read`/`try_write` (or [`AsyncTcpStream`]) become
+    /// usable.
+    pub fn set_nonblocking(&self, on: bool) -> Result<()> {
+        let flags = unsafe { fcntl(self.fd, F_GETFL, 0) };
+        if flags < 0 {
+            return Err(AmigaError::IoError(errno()));
+        }
+        let newflags = if on { flags | O_NONBLOCK } else { flags & !O_NONBLOCK };
+        let rc = unsafe { fcntl(self.fd, F_SETFL, newflags) };
+        if rc < 0 {
+            Err(AmigaError::IoError(errno()))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Non-blocking recv. Returns `Ok(Some(n))` if `n>0` bytes were
+    /// read (`n==0` means orderly EOF), `Ok(None)` if the socket would
+    /// have blocked, or `Err` on a hard failure. Requires the socket
+    /// to have been put into non-blocking mode first.
+    pub fn try_read(&self, buf: &mut [u8]) -> Result<Option<usize>> {
+        let n = unsafe { recv(self.fd, buf.as_mut_ptr(), buf.len() as u32, 0) };
+        if n >= 0 {
+            return Ok(Some(n as usize));
+        }
+        let e = errno();
+        if e == EAGAIN || e == EWOULDBLOCK {
+            Ok(None)
+        } else {
+            Err(AmigaError::IoError(e))
+        }
+    }
+
+    /// Non-blocking send.  Returns `Ok(Some(n))` for the bytes sent
+    /// (possibly short), `Ok(None)` if the socket would have blocked,
+    /// or `Err` on a hard failure.
+    pub fn try_write(&self, buf: &[u8]) -> Result<Option<usize>> {
+        let n = unsafe { send(self.fd, buf.as_ptr(), buf.len() as u32, 0) };
+        if n >= 0 {
+            return Ok(Some(n as usize));
+        }
+        let e = errno();
+        if e == EAGAIN || e == EWOULDBLOCK {
+            Ok(None)
+        } else {
+            Err(AmigaError::IoError(e))
+        }
+    }
+
     /// Shut down both halves of the connection.
     pub fn shutdown(&self) -> Result<()> {
         let rc = unsafe { shutdown(self.fd, SHUT_RDWR) };
@@ -323,6 +386,123 @@ impl Drop for TcpStream {
                 close(self.fd);
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AsyncTcpStream — minimal Future-based wrapper
+// ---------------------------------------------------------------------------
+//
+// This is a thin shim on top of a non-blocking TcpStream. Each read or
+// write call is exposed as a future that polls the underlying syscall
+// once per turn; on EAGAIN it re-wakes itself via cx.waker().wake_by_ref
+// so the executor re-polls without sleeping.
+//
+// That makes this a busy-poll cooperative loop, not a proper readiness
+// scheduler. It works fine for examples that want to interleave a
+// handful of socket-driven tasks with other futures, but it does spin
+// at 100% CPU while idle — the AmigaOS-native way to fix that would be
+// to integrate `WaitSelect()` into the executor's wait point. That
+// belongs in a follow-up patch; for now this is enough to demonstrate
+// the API.
+
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll};
+
+/// Future-based wrapper over a non-blocking [`TcpStream`].
+///
+/// Created by [`TcpStream::into_async`]. Read/write operations return
+/// futures that yield via `cx.waker().wake_by_ref()` on EAGAIN.
+pub struct AsyncTcpStream {
+    inner: TcpStream,
+}
+
+impl AsyncTcpStream {
+    /// Wrap an existing [`TcpStream`], putting it in non-blocking mode.
+    pub fn new(stream: TcpStream) -> Result<Self> {
+        stream.set_nonblocking(true)?;
+        Ok(Self { inner: stream })
+    }
+
+    /// Return the raw file descriptor.
+    #[inline]
+    pub fn as_raw_fd(&self) -> i32 {
+        self.inner.as_raw_fd()
+    }
+
+    /// Convenience: connect blocking, switch to non-blocking, return.
+    pub fn connect(addr: &SocketAddr) -> Result<Self> {
+        let s = TcpStream::connect(addr)?;
+        Self::new(s)
+    }
+
+    /// Future that resolves to either `Ok(n)` bytes read (0 = EOF) or
+    /// `Err`. Calls into `recv()` on each poll.
+    pub fn read<'a>(&'a self, buf: &'a mut [u8]) -> ReadFut<'a> {
+        ReadFut { stream: self, buf }
+    }
+
+    /// Future that writes the full buffer, looping internally over
+    /// short writes. Resolves to `Ok(())` on success.
+    pub fn write_all<'a>(&'a self, buf: &'a [u8]) -> WriteAllFut<'a> {
+        WriteAllFut { stream: self, buf, sent: 0 }
+    }
+}
+
+/// Borrowing read future returned by [`AsyncTcpStream::read`].
+pub struct ReadFut<'a> {
+    stream: &'a AsyncTcpStream,
+    buf: &'a mut [u8],
+}
+
+impl<'a> Future for ReadFut<'a> {
+    type Output = Result<usize>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        // SAFETY: we don't move anything from `this`; we only re-borrow
+        // the underlying buf slice.
+        let this = unsafe { self.get_unchecked_mut() };
+        match this.stream.inner.try_read(&mut *this.buf) {
+            Ok(Some(n)) => Poll::Ready(Ok(n)),
+            Ok(None) => {
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            }
+            Err(e) => Poll::Ready(Err(e)),
+        }
+    }
+}
+
+/// Borrowing write-all future returned by [`AsyncTcpStream::write_all`].
+pub struct WriteAllFut<'a> {
+    stream: &'a AsyncTcpStream,
+    buf: &'a [u8],
+    sent: usize,
+}
+
+impl<'a> Future for WriteAllFut<'a> {
+    type Output = Result<()>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = unsafe { self.get_unchecked_mut() };
+        while this.sent < this.buf.len() {
+            let remaining = &this.buf[this.sent..];
+            match this.stream.inner.try_write(remaining) {
+                Ok(Some(0)) => {
+                    return Poll::Ready(Err(AmigaError::IoError(0)));
+                }
+                Ok(Some(n)) => {
+                    this.sent += n;
+                }
+                Ok(None) => {
+                    cx.waker().wake_by_ref();
+                    return Poll::Pending;
+                }
+                Err(e) => return Poll::Ready(Err(e)),
+            }
+        }
+        Poll::Ready(Ok(()))
     }
 }
 
