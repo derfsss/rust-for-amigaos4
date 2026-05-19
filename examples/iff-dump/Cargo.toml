@@ -1,0 +1,25 @@
+[package]
+name = "iff-dump"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "iff_dump"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+[dependencies]
+amigaos4-sys = { path = "../../amigaos4-sys", features = ["exec", "dos", "intuition", "utility", "iffparse"] }
+amigaos4 = { path = "../../amigaos4" }
+amigaos4-alloc = { path = "../../amigaos4-alloc" }
