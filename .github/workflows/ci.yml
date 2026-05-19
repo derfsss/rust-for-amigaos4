@@ -132,6 +132,15 @@ jobs:
       - name: Build examples/async-net-echo (link to ELF)
         run: ./build.sh examples/async-net-echo
 
+      - name: Build examples/iff-dump (link to ELF)
+        run: ./build.sh examples/iff-dump
+
+      - name: Build examples/locale-i18n-hello (link to ELF)
+        run: ./build.sh examples/locale-i18n-hello
+
+      - name: Build examples/audio-tone (link to ELF)
+        run: ./build.sh examples/audio-tone
+
       # ── Verify each example produced a PPC ELF ───────────────────
       # Cheap insurance against `make all` silently no-op'ing.
       - name: Verify ELF outputs
@@ -166,6 +175,9 @@ jobs:
           check examples/wbstartup-hello/wbstartup-hello
           check examples/xadmaster-list/xadmaster-list
           check examples/async-net-echo/async-net-echo
+          check examples/iff-dump/iff-dump
+          check examples/locale-i18n-hello/locale-i18n-hello
+          check examples/audio-tone/audio-tone
 
       # ── Host-side tests ──────────────────────────────────────────
       # Run unit / integration tests for the amigaos4 crate on the
@@ -218,5 +230,8 @@ jobs:
             examples/wbstartup-hello/wbstartup-hello
             examples/xadmaster-list/xadmaster-list
             examples/async-net-echo/async-net-echo
+            examples/iff-dump/iff-dump
+            examples/locale-i18n-hello/locale-i18n-hello
+            examples/audio-tone/audio-tone
           if-no-files-found: error
           retention-days: 14
