@@ -133,6 +133,10 @@ pub const WA_BACKDROP: u32 = WA_DUMMY + 0x22;
 pub const WA_BORDERLESS: u32 = WA_DUMMY + 0x25;
 /// Activate the window immediately on open.
 pub const WA_ACTIVATE: u32 = WA_DUMMY + 0x26;
+/// Report pointer movement over the window (IDCMP_MOUSEMOVE without needing a
+/// button held). Boolean tag: set to 1 to enable. Value `WA_Dummy + 0x23` per
+/// the OS4 SDK `intuition/intuition.h`.
+pub const WA_REPORT_MOUSE: u32 = WA_DUMMY + 0x23;
 /// Trap right mouse button events (suppress menu).
 pub const WA_RMBTRAP: u32 = WA_DUMMY + 0x27;
 /// Use simple refresh mode.
