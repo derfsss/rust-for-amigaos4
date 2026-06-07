@@ -99,6 +99,65 @@ impl Drop for AmigaVec {
     }
 }
 
+/// An exec memory pool (`CreatePool`/`AllocPooled`). Sub-allocations are freed
+/// ATOMICALLY when the pool is dropped (`DeletePool` frees the whole pool at
+/// once, even allocations you never freed individually) - useful for a unit of
+/// work whose memory should all go away together (e.g. a contained subsystem).
+///
+/// Automatically deletes the pool on drop.
+pub struct AmigaPool {
+    pool: APTR,
+}
+
+impl AmigaPool {
+    /// Create a pool. `mem_type` is the `MEMF_*` requirements, `puddle` the bytes
+    /// allocated per puddle, and `thresh` the largest single allocation served
+    /// from puddles (larger allocations get their own dedicated block). `thresh`
+    /// must be <= `puddle`.
+    pub fn new(mem_type: u32, puddle: u32, thresh: u32) -> Result<Self> {
+        let pool = unsafe { amigaos4_sys::exec_create_pool(mem_type, puddle, thresh) };
+        if pool.is_null() {
+            Err(AmigaError::AllocationFailed)
+        } else {
+            Ok(Self { pool })
+        }
+    }
+
+    /// Allocate `size` bytes from the pool. The memory is freed en masse when the
+    /// pool is dropped (or individually via [`AmigaPool::free`]). Returns a null
+    /// pointer on failure.
+    pub fn alloc(&self, size: usize) -> *mut u8 {
+        if size > u32::MAX as usize {
+            return core::ptr::null_mut();
+        }
+        unsafe { amigaos4_sys::exec_alloc_pooled(self.pool, size as u32) as *mut u8 }
+    }
+
+    /// Free a single allocation back to the pool (optional - the pool frees
+    /// everything on drop). `size` must match the original `alloc`.
+    ///
+    /// # Safety
+    /// `ptr` must have come from this pool's `alloc` with the same `size`.
+    pub unsafe fn free(&self, ptr: *mut u8, size: usize) {
+        if !ptr.is_null() && size <= u32::MAX as usize {
+            amigaos4_sys::exec_free_pooled(self.pool, ptr as APTR, size as u32);
+        }
+    }
+
+    /// The raw pool header.
+    pub fn as_ptr(&self) -> APTR {
+        self.pool
+    }
+}
+
+impl Drop for AmigaPool {
+    fn drop(&mut self) {
+        if !self.pool.is_null() {
+            unsafe { amigaos4_sys::exec_delete_pool(self.pool) }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
