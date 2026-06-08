@@ -35,6 +35,16 @@ Subcommands:
       Clean a project (delegates to build.sh … clean).
       If no path is given, uses the current directory.
 
+  run [<project-path>] [--target NAME] [--args "..."]
+      Build, then deploy + launch the exe on a fleet target (QEMU or hardware)
+      via the amiga-fleet CLI. Starts + stops QEMU around the run.
+
+  test [<project-path>] --wait REGEX [--target NAME] [--args "..."] [--timeout N]
+      Like 'run', but wait for REGEX in the target's serial output and exit
+      non-zero if it is not seen within --timeout seconds (a headless smoke).
+      Needs the amiga-fleet CLI: a sibling MCP-AmigaOS4 checkout, or set
+      AMIGA_FLEET_MCP_HOST=/path/to/MCP-AmigaOS4/host.
+
   setup
       Run first-time setup (delegates to setup.sh).
 
@@ -227,6 +237,91 @@ cmd_clean() {
 }
 
 # ---------------------------------------------------------------------------
+# run / test — build, then deploy + launch on a fleet target (QEMU or hardware)
+# via the amiga-fleet CLI (MCP-AmigaOS4). `run` just launches; `test` also waits
+# for a serial marker and exits non-zero if it is not seen (a headless smoke).
+# ---------------------------------------------------------------------------
+
+# Locate the MCP-AmigaOS4 host dir (which has the fleet CLI). Override with
+# AMIGA_FLEET_MCP_HOST; else look for a sibling checkout.
+fleet_host() {
+    if [ -n "${AMIGA_FLEET_MCP_HOST:-}" ]; then
+        echo "$AMIGA_FLEET_MCP_HOST"; return 0
+    fi
+    for h in "$REPO_ROOT/../../MCP-AmigaOS4/host" "$REPO_ROOT/../MCP-AmigaOS4/host"; do
+        if [ -d "$h/src/amiga_fleet_mcp" ]; then echo "$h"; return 0; fi
+    done
+    return 1
+}
+
+# Run the fleet CLI (python -m amiga_fleet_mcp.cli) with the given args.
+fleet_cli() {
+    host="$(fleet_host)" || die "amiga-fleet CLI not found. Set AMIGA_FLEET_MCP_HOST=/path/to/MCP-AmigaOS4/host or place MCP-AmigaOS4 as a sibling of this repo."
+    py="$host/.venv/Scripts/python.exe"
+    [ -f "$py" ] || py="$host/.venv/bin/python"
+    [ -f "$py" ] || py="python3"
+    ( cd "$host" && PYTHONPATH=src "$py" -m amiga_fleet_mcp.cli "$@" )
+}
+
+# Resolve a project path (arg or cwd-relative-to-repo, like cmd_build) and the
+# executable it produces (the Makefile's TARGET).
+_resolve_project() {
+    if [ -n "$1" ]; then
+        PROJECT="$1"
+    else
+        CWD="$(pwd)"; PREFIX="$REPO_ROOT/"
+        case "$CWD" in
+            "$REPO_ROOT"/*) PROJECT="${CWD#$PREFIX}" ;;
+            *) die "Current directory is not inside the repository (pass a project path)." ;;
+        esac
+    fi
+    case "$PROJECT" in /*) PROJ_DIR="$PROJECT" ;; *) PROJ_DIR="$REPO_ROOT/$PROJECT" ;; esac
+    [ -f "$PROJ_DIR/Makefile" ] || die "no Makefile in $PROJ_DIR"
+    TARGET_NAME="$(grep -E '^TARGET[[:space:]]*=' "$PROJ_DIR/Makefile" | head -1 | sed -E 's/^TARGET[[:space:]]*=[[:space:]]*//' | tr -d ' \r')"
+    [ -n "$TARGET_NAME" ] || die "could not read TARGET from $PROJ_DIR/Makefile"
+    EXE="$PROJ_DIR/$TARGET_NAME"
+}
+
+cmd_run() {
+    PROJECT=""; TGT=""; RUN_ARGS=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --target) TGT="$2"; shift 2 ;;
+            --args) RUN_ARGS="$2"; shift 2 ;;
+            -*) die "run: unknown flag $1" ;;
+            *) PROJECT="$1"; shift ;;
+        esac
+    done
+    _resolve_project "$PROJECT"
+    "$REPO_ROOT/build.sh" "$PROJECT"
+    set -- qemu_run --exe "$EXE" --start --stop
+    [ -n "$TGT" ] && set -- "$@" --target "$TGT"
+    [ -n "$RUN_ARGS" ] && set -- "$@" "--args=$RUN_ARGS"
+    fleet_cli "$@"
+}
+
+cmd_test() {
+    PROJECT=""; TGT=""; RUN_ARGS=""; WAIT=""; TIMEOUT="240"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --target) TGT="$2"; shift 2 ;;
+            --args) RUN_ARGS="$2"; shift 2 ;;
+            --wait) WAIT="$2"; shift 2 ;;
+            --timeout) TIMEOUT="$2"; shift 2 ;;
+            -*) die "test: unknown flag $1" ;;
+            *) PROJECT="$1"; shift ;;
+        esac
+    done
+    [ -n "$WAIT" ] || die "test: --wait REGEX is required (the serial marker that means success)."
+    _resolve_project "$PROJECT"
+    "$REPO_ROOT/build.sh" "$PROJECT"
+    set -- qemu_run --exe "$EXE" --wait "$WAIT" --timeout "$TIMEOUT" --start --stop
+    [ -n "$TGT" ] && set -- "$@" --target "$TGT"
+    [ -n "$RUN_ARGS" ] && set -- "$@" "--args=$RUN_ARGS"
+    fleet_cli "$@"
+}
+
+# ---------------------------------------------------------------------------
 # setup — one-time setup
 # ---------------------------------------------------------------------------
 
@@ -245,6 +340,8 @@ case "$SUBCOMMAND" in
     new)    cmd_new "$@" ;;
     build)  cmd_build "$@" ;;
     clean)  cmd_clean "$@" ;;
+    run)    cmd_run "$@" ;;
+    test)   cmd_test "$@" ;;
     setup)  cmd_setup ;;
     help|-h|--help)  usage ;;
     *)      die "Unknown subcommand: $SUBCOMMAND. Run 'cargo-amiga.sh help' for usage." ;;
