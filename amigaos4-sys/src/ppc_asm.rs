@@ -64,7 +64,7 @@ pub unsafe fn cache_invalidate(addr: *const u8, len: usize) {
     let end = (addr as usize).wrapping_add(len) as *const u8;
     while p < end {
         unsafe {
-            asm!("dcbf 0, {0}", in(reg) p, options(nostack));
+            asm!("dcbf 0, {0}", in(reg) p, options(nostack, preserves_flags));
         }
         p = unsafe { p.add(CACHE_LINE) };
     }
