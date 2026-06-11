@@ -6,9 +6,12 @@
 //! Everything in this module is pure Rust with no FFI, compiled on every
 //! target, so its tests run on every host `cargo test`.
 
-// The consumers (net/dns/http) are PPC-only, so on the host these
-// helpers are exercised only by the tests below.
-#![cfg_attr(not(target_arch = "powerpc"), allow(dead_code))]
+// The consumers (net/dns/http) only compile for PPC application builds,
+// so everywhere else these helpers are exercised only by the tests below.
+#![cfg_attr(
+    not(all(feature = "net", target_arch = "powerpc")),
+    allow(dead_code)
+)]
 
 use alloc::vec::Vec;
 use crate::error::{AmigaError, Result};

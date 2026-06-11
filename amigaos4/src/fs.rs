@@ -106,6 +106,27 @@ impl File {
     pub fn as_raw_fd(&self) -> i32 {
         self.fd
     }
+
+    /// Seek to an absolute byte offset from the start of the file.
+    /// Returns the new offset.
+    pub fn seek(&mut self, offset: i32) -> Result<i32> {
+        let pos = unsafe { lseek(self.fd, offset, SEEK_SET) };
+        if pos < 0 {
+            Err(AmigaError::IoError(errno()))
+        } else {
+            Ok(pos)
+        }
+    }
+
+    /// Seek to the end of the file, returning its size in bytes.
+    pub fn seek_end(&mut self) -> Result<i32> {
+        let pos = unsafe { lseek(self.fd, 0, SEEK_END) };
+        if pos < 0 {
+            Err(AmigaError::IoError(errno()))
+        } else {
+            Ok(pos)
+        }
+    }
 }
 
 impl io::Read for File {

@@ -37,7 +37,6 @@ extern "C" {
 // clib4 errno values; EAGAIN/EWOULDBLOCK collapse to the same value.
 const EAGAIN: i32       = 35;
 const EWOULDBLOCK: i32  = EAGAIN;
-const EINPROGRESS: i32  = 36;
 
 // clib4 fcntl.h
 const F_GETFL: i32 = 3;

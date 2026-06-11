@@ -99,6 +99,88 @@ impl Drop for AmigaVec {
     }
 }
 
+/// A DMA-capable buffer: `MEMF_SHARED` memory paired with the PPC cache
+/// maintenance a device driver needs around DMA transfers.
+///
+/// Typical use in a driver:
+///
+/// ```ignore
+/// let mut buf = DmaBuffer::alloc(4096)?;
+/// buf.as_mut_slice()[..len].copy_from_slice(data);
+/// buf.flush();              // CPU writes -> RAM, device may now read
+/// // ... start device DMA read of buf ...
+///
+/// // ... device DMA wrote into buf ...
+/// buf.invalidate();         // next CPU read fetches fresh RAM
+/// let received = &buf.as_slice()[..len];
+/// ```
+pub struct DmaBuffer {
+    mem: AmigaVec,
+}
+
+impl DmaBuffer {
+    /// Allocate `size` bytes of zeroed `MEMF_SHARED` memory.
+    pub fn alloc(size: usize) -> Result<Self> {
+        Ok(Self {
+            mem: AmigaVec::alloc_cleared(size, amigaos4_sys::MEMF_SHARED, 0)?,
+        })
+    }
+
+    /// Flush CPU caches to RAM (`dcbst`) so the device sees the latest
+    /// CPU-written data. Call before starting a device-read DMA.
+    /// (No-op on non-PPC hosts.)
+    pub fn flush(&self) {
+        // SAFETY: ptr/len describe this allocation.
+        #[cfg(target_arch = "powerpc")]
+        unsafe {
+            amigaos4_sys::ppc_asm::cache_flush(self.mem.as_ptr(), self.mem.len())
+        }
+    }
+
+    /// Flush + invalidate CPU caches (`dcbf`) so the next CPU read
+    /// fetches fresh data from RAM. Call after a device-write DMA
+    /// completes, before reading the buffer. (No-op on non-PPC hosts.)
+    pub fn invalidate(&self) {
+        // SAFETY: ptr/len describe this allocation.
+        #[cfg(target_arch = "powerpc")]
+        unsafe {
+            amigaos4_sys::ppc_asm::cache_invalidate(self.mem.as_ptr(), self.mem.len())
+        }
+    }
+
+    /// The buffer as a byte slice.
+    #[inline]
+    pub fn as_slice(&self) -> &[u8] {
+        self.mem.as_slice()
+    }
+
+    /// The buffer as a mutable byte slice.
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        self.mem.as_mut_slice()
+    }
+
+    /// Raw pointer for handing to the device (physical = virtual for
+    /// MEMF_SHARED on supported systems; use `GetPhysicalAddress`-style
+    /// APIs where the hardware needs a physical address).
+    #[inline]
+    pub fn as_ptr(&self) -> *const u8 {
+        self.mem.as_ptr()
+    }
+
+    /// Buffer length in bytes.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.mem.len()
+    }
+
+    /// True if the buffer has zero length.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.mem.is_empty()
+    }
+}
+
 /// An exec memory pool (`CreatePool`/`AllocPooled`). Sub-allocations are freed
 /// ATOMICALLY when the pool is dropped (`DeletePool` frees the whole pool at
 /// once, even allocations you never freed individually) - useful for a unit of
