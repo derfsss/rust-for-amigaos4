@@ -27,6 +27,19 @@ impl AmigaMsgPort {
     pub fn as_ptr(&self) -> *mut MsgPort {
         self.ptr
     }
+
+    /// The Exec signal mask of this port (`1 << mp_SigBit`).
+    ///
+    /// Useful for combining a port wait with other signals via
+    /// `exec_wait`, and used by the async runtime to wake the executor
+    /// when a message arrives.
+    #[inline]
+    pub fn signal_mask(&self) -> u32 {
+        // struct MsgPort (2-byte packed): Node 0..14, mp_Flags @14,
+        // mp_SigBit @15, mp_SigTask @16, mp_MsgList @20.
+        // SAFETY: self.ptr is a valid open MsgPort (created in new()).
+        unsafe { 1u32 << *((self.ptr as *const u8).add(15)) }
+    }
 }
 
 impl Drop for AmigaMsgPort {

@@ -37,9 +37,36 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::future::Future;
 use core::pin::Pin;
+use core::sync::atomic::{AtomicU32, Ordering};
 use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 
 use crate::error::{AmigaError, Result};
+
+// ---------------------------------------------------------------------------
+// External signal registry
+// ---------------------------------------------------------------------------
+
+/// Extra Exec signal bits the executor should wake on, in addition to
+/// its own waker bit. Signal-backed futures (timer delays, window
+/// events, ...) register the signal of their reply/user port here while
+/// pending, so the executor's `Wait()` returns when the OS signals
+/// them — each poll round then re-polls every task.
+///
+/// A single shared registry (rather than per-executor state) keeps the
+/// future types free of executor references; the cost is only that an
+/// executor may wake for a signal belonging to a future on another
+/// executor, which is a harmless extra poll round.
+static EXT_WAIT_MASK: AtomicU32 = AtomicU32::new(0);
+
+/// Add `mask` to the set of signals executors wait on.
+pub(crate) fn register_ext_signal(mask: u32) {
+    EXT_WAIT_MASK.fetch_or(mask, Ordering::Relaxed);
+}
+
+/// Remove `mask` from the set of signals executors wait on.
+pub(crate) fn unregister_ext_signal(mask: u32) {
+    EXT_WAIT_MASK.fetch_and(!mask, Ordering::Relaxed);
+}
 
 // ---------------------------------------------------------------------------
 // Task wrapper
@@ -131,7 +158,10 @@ impl Executor {
                 // before we'd wait on it.
                 let current = unsafe { amigaos4_sys::exec_set_signal(0, 0) };
                 if current & self.signal_mask == 0 {
-                    unsafe { amigaos4_sys::exec_wait(self.signal_mask); }
+                    // Also wake on any signal registered by pending
+                    // signal-backed futures (timer replies, IDCMP, ...).
+                    let ext = EXT_WAIT_MASK.load(Ordering::Relaxed);
+                    unsafe { amigaos4_sys::exec_wait(self.signal_mask | ext); }
                 }
                 // Either path lands us here: clear the wake bit and
                 // mark every pending task ready for the next round.

@@ -349,6 +349,30 @@ impl AmigaWindow {
         self.ptr
     }
 
+    /// Await the next IDCMP message asynchronously.
+    ///
+    /// While pending, the window's UserPort signal is registered with
+    /// the async runtime so the executor wakes on GUI input — one
+    /// executor can then select over sockets, timers, and the GUI:
+    ///
+    /// ```ignore
+    /// let msg = win.next_event().await;
+    /// ```
+    pub fn next_event(&self) -> WindowEventFuture<'_> {
+        // SAFETY: self.ptr is a valid open window; a null UserPort
+        // yields mask 0, which is simply never registered.
+        let mask = unsafe {
+            let port = window_user_port(self.ptr);
+            if port.is_null() {
+                0
+            } else {
+                // struct MsgPort (2-byte packed): mp_SigBit @15.
+                1u32 << *((port as *const u8).add(15))
+            }
+        };
+        WindowEventFuture { win: self, mask, registered: false }
+    }
+
     /// Consume the wrapper and return the raw pointer without closing
     /// the window. The caller assumes responsibility for calling
     /// `intuition_close_window`.
@@ -364,6 +388,46 @@ impl Drop for AmigaWindow {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             unsafe { amigaos4_sys::intuition_close_window(self.ptr) }
+        }
+    }
+}
+
+/// Future returned by [`AmigaWindow::next_event`]. Resolves to the next
+/// IDCMP message (already copied and replied).
+pub struct WindowEventFuture<'a> {
+    win: &'a AmigaWindow,
+    mask: u32,
+    registered: bool,
+}
+
+impl core::future::Future for WindowEventFuture<'_> {
+    type Output = IntuiMsg;
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<IntuiMsg> {
+        let this = self.get_mut();
+        if let Some(msg) = this.win.get_msg() {
+            if this.registered {
+                crate::async_rt::unregister_ext_signal(this.mask);
+                this.registered = false;
+            }
+            core::task::Poll::Ready(msg)
+        } else {
+            if !this.registered && this.mask != 0 {
+                crate::async_rt::register_ext_signal(this.mask);
+                this.registered = true;
+            }
+            core::task::Poll::Pending
+        }
+    }
+}
+
+impl Drop for WindowEventFuture<'_> {
+    fn drop(&mut self) {
+        if self.registered {
+            crate::async_rt::unregister_ext_signal(self.mask);
         }
     }
 }

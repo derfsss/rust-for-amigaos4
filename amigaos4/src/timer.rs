@@ -242,6 +242,98 @@ impl AmigaTimer {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Async delay
+// ---------------------------------------------------------------------------
+
+/// A pending asynchronous timer delay (see [`delay_async`]).
+///
+/// The request is sent with `SendIO` on the first poll; while pending,
+/// the reply port's signal is registered with the async runtime so the
+/// executor wakes when the timer fires. Dropping an unfinished delay
+/// aborts the request cleanly (`AbortIO` + `WaitIO`).
+pub struct TimerDelay {
+    timer: AmigaTimer,
+    duration: TimerVal,
+    started: bool,
+    done: bool,
+}
+
+/// Start an asynchronous timer delay.
+///
+/// Opens its own timer.device unit; await the returned future inside an
+/// [`Executor`](crate::async_rt::Executor):
+///
+/// ```ignore
+/// exec.block_on(async {
+///     amigaos4::timer::delay_async(TimerUnit::MicroHz, TimerVal::from_millis(500))?.await;
+///     Ok::<(), amigaos4::AmigaError>(())
+/// });
+/// ```
+pub fn delay_async(unit: TimerUnit, duration: TimerVal) -> Result<TimerDelay> {
+    Ok(TimerDelay {
+        timer: AmigaTimer::open(unit)?,
+        duration,
+        started: false,
+        done: false,
+    })
+}
+
+impl core::future::Future for TimerDelay {
+    type Output = ();
+
+    fn poll(
+        self: core::pin::Pin<&mut Self>,
+        _cx: &mut core::task::Context<'_>,
+    ) -> core::task::Poll<()> {
+        let this = self.get_mut();
+        if this.done {
+            return core::task::Poll::Ready(());
+        }
+
+        if !this.started {
+            // SAFETY: request is a valid open timer IORequest; offsets
+            // are within the TimeRequest allocated in open().
+            unsafe {
+                let base = this.timer.request as *mut u8;
+                *(base.add(IO_COMMAND_OFFSET) as *mut u16) = TR_ADDREQUEST;
+                *(base.add(TIME_SECONDS_OFFSET) as *mut u32) = this.duration.secs;
+                *(base.add(TIME_MICROS_OFFSET) as *mut u32) = this.duration.micros;
+                amigaos4_sys::exec_send_io(this.timer.request);
+            }
+            crate::async_rt::register_ext_signal(this.timer._port.signal_mask());
+            this.started = true;
+        }
+
+        // SAFETY: request was sent above and not yet reaped.
+        let complete = unsafe { !amigaos4_sys::exec_check_io(this.timer.request).is_null() };
+        if complete {
+            // SAFETY: the request is complete, so WaitIO returns
+            // immediately and removes the reply from the port.
+            unsafe { amigaos4_sys::exec_wait_io(this.timer.request) };
+            crate::async_rt::unregister_ext_signal(this.timer._port.signal_mask());
+            this.done = true;
+            core::task::Poll::Ready(())
+        } else {
+            core::task::Poll::Pending
+        }
+    }
+}
+
+impl Drop for TimerDelay {
+    fn drop(&mut self) {
+        if self.started && !self.done {
+            // SAFETY: the request is in flight; abort it and wait for
+            // the reply so AmigaTimer's Drop can safely close/delete.
+            unsafe {
+                amigaos4_sys::exec_abort_io(self.timer.request);
+                amigaos4_sys::exec_wait_io(self.timer.request);
+            }
+            crate::async_rt::unregister_ext_signal(self.timer._port.signal_mask());
+        }
+    }
+}
+
 impl Drop for AmigaTimer {
     fn drop(&mut self) {
         if self.device_open {
