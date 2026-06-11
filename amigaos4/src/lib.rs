@@ -30,6 +30,7 @@
 extern crate alloc;
 
 // Always available (pure Rust or Exec-only, no clib4 dependency):
+pub mod asl;
 pub mod cstr;
 pub mod error;
 pub mod tag;
@@ -43,6 +44,7 @@ pub mod requester;
 pub mod reaction;
 pub mod io;
 pub mod fmt;
+pub mod menu;
 pub mod panic;
 pub mod dos;
 pub mod locale;
@@ -53,6 +55,9 @@ pub mod clipboard;
 // Internal: pure parsing helpers for the network modules. Always compiled
 // (the modules using it are PPC-only) so its tests run on host cargo test.
 pub(crate) mod parse;
+
+// Internal: RAII OpenLibrary/GetInterface for runtime-opened interfaces.
+pub(crate) mod iface;
 
 // Application-only (require clib4 POSIX functions). Doubly gated: the
 // user must opt in via the feature *and* the build must be for the PPC

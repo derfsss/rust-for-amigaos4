@@ -15,4 +15,4 @@ env = []
 net = []
 
 [dependencies]
-amigaos4-sys = { path = "../amigaos4-sys", features = ["locale", "graphics", "timer", "iffparse"] }
+amigaos4-sys = { path = "../amigaos4-sys", features = ["locale", "graphics", "timer", "iffparse", "asl", "listbrowser"] }
