@@ -51,6 +51,11 @@ pub fn resolve(hostname: &[u8]) -> Result<Vec<[u8; 4]>> {
 
     let mut addrs = Vec::new();
     unsafe {
+        // Only IPv4 results are supported — each address must be 4 octets,
+        // otherwise the fixed-size reads below would over- or under-read.
+        if (*he).h_length != 4 {
+            return Err(AmigaError::NullPointer);
+        }
         let list = (*he).h_addr_list;
         if list.is_null() {
             return Err(AmigaError::NullPointer);
