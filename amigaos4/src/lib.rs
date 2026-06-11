@@ -30,6 +30,7 @@
 extern crate alloc;
 
 // Always available (pure Rust or Exec-only, no clib4 dependency):
+pub mod application;
 pub mod asl;
 pub mod cstr;
 pub mod error;

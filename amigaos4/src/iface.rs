@@ -21,7 +21,19 @@ impl OpenedInterface {
     /// Open `lib_name` (null-terminated, e.g. `b"asl.library\0"`) at
     /// `version` and obtain its `main` interface.
     pub(crate) fn open(lib_name: &[u8], version: u32) -> Result<Self> {
+        Self::open_named(lib_name, version, b"main\0", 1)
+    }
+
+    /// Like [`open`](Self::open), for libraries whose interface is not
+    /// called `main` (e.g. application.library's `"application"`).
+    pub(crate) fn open_named(
+        lib_name: &[u8],
+        version: u32,
+        iface_name: &[u8],
+        iface_version: u32,
+    ) -> Result<Self> {
         let name_ptr = require_nul(lib_name)?;
+        let iface_name_ptr = require_nul(iface_name)?;
         // SAFETY: name is null-terminated; OpenLibrary returns null on
         // failure, checked below.
         let lib = unsafe {
@@ -30,13 +42,13 @@ impl OpenedInterface {
         if lib.is_null() {
             return Err(AmigaError::NullPointer);
         }
-        // SAFETY: lib is a valid opened library; "main" interface
-        // version 1 exists for every OS4 library.
+        // SAFETY: lib is a valid opened library; the interface name is
+        // null-terminated (validated above).
         let iface = unsafe {
             amigaos4_sys::exec_get_interface(
                 lib,
-                b"main\0".as_ptr() as CONST_STRPTR,
-                1,
+                iface_name_ptr as CONST_STRPTR,
+                iface_version,
                 core::ptr::null(),
             )
         };
