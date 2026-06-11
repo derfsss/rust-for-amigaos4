@@ -2,7 +2,7 @@
 
 Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust.
 
-**Status: Beta** — 29 safe wrapper modules, 129 SDK interface bindings, ~365 tests, 3 build modes. Tested on QEMU (`-M amigaone`).
+**Status: Beta** — 29 safe wrapper modules, 129 SDK interface bindings, ~365 tests, 3 build modes. Tested on QEMU (`-M amigaone`) **and real X5000 hardware**.
 
 > **Made with AI** — This project (code, bindings, build infrastructure, and documentation) was built using [Claude Code](https://claude.ai/claude-code) by Anthropic.
 
@@ -178,9 +178,9 @@ Driver-mode (`hello-driver`) and shared-library-mode binaries do not need `clib4
 - **No `std` crate** — this is `no_std` only; the Rust standard library does not support AmigaOS
 - **No stack unwinding** — panic strategy is `abort`
 - **No 64-bit atomics** — PPC G3/G4 supports only 32-bit atomic operations
-- **No TLS/SSL** — AmiSSL integration is too complex for safe wrappers
+- **No TLS/SSL yet** — the AmiSSL init chain is validated (see `thread-amissl-probe`); the socket plumbing plan is in the roadmap
 - **No Rust-native varargs** — 5 varargs methods require C glue wrappers (provided)
-- **Not tested on real hardware** — only verified on QEMU; real AmigaOne/Sam/X5000 may differ
+- **Audio needs an AHI-supported card** — `audio-tone` plays on QEMU; on machines where AHI finds no sound card, `OpenDevice("ahi.device")` fails cleanly
 
 ---
 
@@ -338,9 +338,10 @@ cd amigaos4-alloc && cargo test --features exec
 
 ---
 
-## Tested Platform
+## Tested Platforms
 
-- QEMU (`qemu-system-ppc -M amigaone`) — application, driver, and library modes
+- QEMU (`qemu-system-ppc -M amigaone`) — application, driver, and library modes; full target harnesses (51/51 main, 5/5 GUI) + AHI playback
+- **AmigaOne X5000 (P5020, Kickstart 54.57) — real hardware**: 51/51 main harness, 5/5 GUI harness, driver-mode (`hello-driver`) verified on 2026-06-11. Requires clib4 2.1 in `LIBS:` (or `PROGDIR:` when no older clib4 shadows it)
 
 ## License
 

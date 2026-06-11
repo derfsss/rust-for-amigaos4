@@ -14,7 +14,7 @@ Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
 - `cargo-amiga.sh`/`.bat` wrapper for project scaffolding, builds, and deploy/run/test on fleet targets
 - 3 templates: app, driver, library
 - 24 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser
-- Tested on QEMU (`-M amigaone`) only
+- Tested on QEMU (`-M amigaone`) and real X5000 hardware (P5020, Kickstart 54.57)
 - All code is `no_std`; `Vec`, `String`, `format!`, `Box` work via global allocator
 - C glue for 5 varargs-only SDK methods
 - PPC inline asm for cache, MMIO, memory barriers
@@ -33,7 +33,8 @@ Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
   - Added `-Wl,--undefined=RomTag` to the Makefile so `--gc-sections` no longer drops the Resident struct. Verified the `0x4AFC` `RTC_MATCHWORD` is present in the linked binary's `.rodata`.
 - [x] **Install docs** — README states plainly: `clib4.library` for Rust programs goes in `PROGDIR:` (same directory as the executable). Also documents how `build.sh` overlays `clib4-nightly/` into the Docker SDK at link time, and how to rebuild clib4 from the submodule and use that as the overlay.
 
-Remaining deferred: real hardware testing (still requires physical Amiga hardware).
+Real hardware testing: completed 2026-06-11 on an X5000 (see the post-1.0
+improvement plan, section B).
 
 ---
 
@@ -215,9 +216,13 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   `parse` module; its tests run on every host `cargo test`.
 - [x] **Target-harness smoke in Tests/** — `target_smoke.rs`, env-gated via
   `AMIGA_TARGET_SMOKE=1`, drives `cargo-amiga test` on a fleet target.
-- [ ] **Real-hardware run** — Execute the harnesses on a physical machine
-  (X5000) and record results; the README's "not tested on real hardware"
-  caveat should eventually fall.
+- [x] **Real-hardware run** — Done 2026-06-11 on an AmigaOne X5000 (P5020,
+  Kickstart 54.57): main harness 51/51, GUI harness 5/5, driver-mode
+  `hello-driver` all pass. Notes: an older `LIBS:clib4.library` (2.0)
+  shadows `PROGDIR:`, so clib4 2.1 must be installed in `LIBS:` (the
+  resident library does not expunge — a reboot is needed); ahi.device
+  unit 0 is unavailable on this machine (AHI finds no supported card),
+  so audio playback remains QEMU-verified only.
 
 ### C. Application-essential features
 

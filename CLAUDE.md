@@ -4,7 +4,7 @@
 
 Rust for AmigaOS 4 — Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust (`no_std`).
 
-**All 10 roadmap phases complete. ~365 tests, 29 modules, 3 templates, shared library output.**
+**All 10 roadmap phases complete. ~365 tests, 29 modules, 3 templates, shared library output. Validated on QEMU and real X5000 hardware.**
 
 ## Repository Layout
 
