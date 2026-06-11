@@ -115,6 +115,9 @@ const TIME_REQUEST_SIZE: u32 = 40;
 const IO_COMMAND_OFFSET: usize = 28;
 
 /// Offset of `io_Error` (i8) within IORequest on PPC.
+/// Unused at runtime — `DoIO` returns io_Error directly — but kept so the
+/// offset table above is complete.
+#[allow(dead_code)]
 const IO_ERROR_OFFSET: usize = 31;
 
 /// Offset of `Time.Seconds` (u32) within TimeRequest on PPC.
@@ -133,7 +136,9 @@ const TIME_MICROS_OFFSET: usize = 36;
 /// delay and time-query operations. The device, I/O request, and message
 /// port are automatically cleaned up on drop.
 pub struct AmigaTimer {
-    port: AmigaMsgPort,
+    /// Held only to keep the reply port alive; its own Drop deletes it
+    /// after `Drop::drop` has closed the device and freed the request.
+    _port: AmigaMsgPort,
     request: *mut IORequest,
     device_open: bool,
 }
@@ -176,7 +181,7 @@ impl AmigaTimer {
         }
 
         Ok(Self {
-            port,
+            _port: port,
             request,
             device_open: true,
         })
@@ -216,6 +221,10 @@ impl AmigaTimer {
     ///
     /// Returns the system time as a [`TimerVal`]. The system time is
     /// monotonically increasing (seconds since midnight, Jan 1, 1978).
+    ///
+    /// `TR_GETSYSTIME` cannot fail per the timer.device autodoc, so the
+    /// `DoIO` return value is not checked; the time fields are pre-zeroed,
+    /// so a hypothetical failure would yield `0/0` rather than garbage.
     pub fn get_sys_time(&mut self) -> TimerVal {
         // SAFETY: We write to known offsets within the TimeRequest.
         unsafe {
