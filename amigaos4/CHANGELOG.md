@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-06-11
+
+### Added
+- `cstr` module: `amstr!("text")` compile-time null-terminated strings;
+  `require_nul()` runtime validation used by every OS-string entry point
+- `menu` module: `MenuBuilder`/`MenuStrip` over the OS4 menuclass
+  (items, shortcuts, separators, `each_select()` pick decoding)
+- `asl` module: `FileRequester` builder (Open/Save/Drawer, patterns)
+- `application` module: `AppRegistration` -> `RegisteredApp` RAII
+  application.library registration with single-instance support
+- `reaction`: slider, chooser (+`ChooserLabels`), listbrowser
+  (+`ListBrowserNodes`) gadgets; `GA_TAB_CYCLE`, `LAYOUT_BEVEL_STYLE`,
+  `INTEGER_ARROWS`, `BVS_GROUP`
+- Async: `timer::delay_async()` and `AmigaWindow::next_event()` futures;
+  executor waits on registered external signals
+- `mem::DmaBuffer`: MEMF_SHARED + dcbst/dcbf cache maintenance
+- `fs::File::seek`/`seek_end`
+- `http`: follows redirects (up to 5 hops), decodes chunked bodies
+- `parse` module (internal, always compiled): pure network parsing,
+  host-tested
+- `AmigaError::NotNulTerminated`, `AmigaError::HostNotFound`
+- `AmigaMsgPort::signal_mask()`
+
+### Changed
+- **Soundness**: every safe API taking a null-terminated `&[u8]` now
+  validates the terminator instead of risking an out-of-bounds read
+- **`reaction` tag values corrected against the SDK 54.16 headers** —
+  the previous invented bases/offsets were silently ignored by BOOPSI
+  (GA_ID, GA_TEXT, GA_RELVERIFY, all LAYOUT_/CHILD_/BUTTON_/STRINGA_/
+  CHECKBOX_/INTEGER_/LABEL_ tags); values now pinned by unit tests
+- `Event::GadgetUp` is now `{ id, code }`: `id` from the gadget's real
+  `GadgetID` (via `IntuiMsg.gadget_id`), `code` carrying the
+  slider/chooser/listbrowser value; `Event::MenuPick` added
+- `dns::resolve` reports `HostNotFound` (was `NullPointer`) and
+  validates `h_length`
+- HTTP status parsing rejects partially-numeric codes
+
+### Removed
+- `reaction::BUTTON_TEXT` (never existed in the SDK — labels use
+  `GA_TEXT`) and `CHILD_WEIGHT_EQUAL` (replaced by the real
+  `CHILD_WEIGHTED_WIDTH`/`CHILD_WEIGHTED_HEIGHT`)
+
 ## [Unreleased]
 
 ### Added
