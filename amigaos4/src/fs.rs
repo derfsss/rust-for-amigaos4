@@ -7,6 +7,7 @@
 //! Requires the `fs` feature (enabled by default via `app`).
 
 use alloc::vec::Vec;
+use crate::cstr::require_nul;
 use crate::error::{AmigaError, Result};
 use crate::io;
 
@@ -72,7 +73,7 @@ pub struct File {
 impl File {
     /// Open a file for reading. `path` must be null-terminated.
     pub fn open(path: &[u8]) -> Result<Self> {
-        let fd = unsafe { open(path.as_ptr(), O_RDONLY) };
+        let fd = unsafe { open(require_nul(path)?, O_RDONLY) };
         if fd < 0 {
             Err(AmigaError::IoError(errno()))
         } else {
@@ -82,7 +83,7 @@ impl File {
 
     /// Create (or truncate) a file for writing. `path` must be null-terminated.
     pub fn create(path: &[u8]) -> Result<Self> {
-        let fd = unsafe { open(path.as_ptr(), O_WRONLY | O_CREAT | O_TRUNC, 0o644u32) };
+        let fd = unsafe { open(require_nul(path)?, O_WRONLY | O_CREAT | O_TRUNC, 0o644u32) };
         if fd < 0 {
             Err(AmigaError::IoError(errno()))
         } else {
@@ -92,7 +93,7 @@ impl File {
 
     /// Open a file for reading and writing. `path` must be null-terminated.
     pub fn open_rw(path: &[u8]) -> Result<Self> {
-        let fd = unsafe { open(path.as_ptr(), O_RDWR) };
+        let fd = unsafe { open(require_nul(path)?, O_RDWR) };
         if fd < 0 {
             Err(AmigaError::IoError(errno()))
         } else {
@@ -176,7 +177,7 @@ pub fn write_file(path: &[u8], data: &[u8]) -> Result<()> {
 
 /// Remove a file. `path` must be null-terminated.
 pub fn remove_file(path: &[u8]) -> Result<()> {
-    let rc = unsafe { unlink(path.as_ptr()) };
+    let rc = unsafe { unlink(require_nul(path)?) };
     if rc < 0 {
         Err(AmigaError::IoError(errno()))
     } else {
@@ -186,7 +187,7 @@ pub fn remove_file(path: &[u8]) -> Result<()> {
 
 /// Create a directory. `path` must be null-terminated.
 pub fn create_dir(path: &[u8]) -> Result<()> {
-    let rc = unsafe { mkdir(path.as_ptr(), 0o755) };
+    let rc = unsafe { mkdir(require_nul(path)?, 0o755) };
     if rc < 0 {
         Err(AmigaError::IoError(errno()))
     } else {
@@ -221,9 +222,10 @@ impl Metadata {
 
 /// Query file metadata. `path` must be null-terminated.
 pub fn metadata(path: &[u8]) -> Result<Metadata> {
+    let path_ptr = require_nul(path)?;
     unsafe {
         let mut st: Stat = core::mem::zeroed();
-        let rc = stat(path.as_ptr(), &mut st);
+        let rc = stat(path_ptr, &mut st);
         if rc < 0 {
             Err(AmigaError::IoError(errno()))
         } else {

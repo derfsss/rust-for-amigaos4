@@ -22,15 +22,14 @@ impl AmigaObject {
     /// `class_id` must be a null-terminated byte string (e.g. `b"rootclass\0"`).
     /// `tags` should be a TAG_DONE-terminated array (use `TagListBuilder::build()`).
     ///
-    /// Returns `Err(NullPointer)` if `class_id` is empty or not null-terminated.
+    /// Returns `Err(NotNulTerminated)` if `class_id` is empty or not
+    /// null-terminated.
     pub fn new(class_id: &[u8], tags: &[TagItem]) -> Result<Self> {
-        if class_id.is_empty() || class_id[class_id.len() - 1] != 0 {
-            return Err(AmigaError::NullPointer);
-        }
+        let class_ptr = crate::cstr::require_nul(class_id)?;
         let ptr = unsafe {
             amigaos4_sys::intuition_new_object_a(
                 core::ptr::null_mut(), // public class — no Class pointer
-                class_id.as_ptr() as APTR,
+                class_ptr as APTR,
                 tags.as_ptr(),
             )
         };

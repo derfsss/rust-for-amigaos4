@@ -146,95 +146,12 @@ impl SocketAddr {
     ///
     /// The input slice may or may not be null-terminated; the parser does not
     /// require it. Returns [`AmigaError::IoError(0)`] on malformed input.
+    ///
+    /// The parsing logic lives in the host-testable `parse` module.
     pub fn parse(addr: &[u8]) -> Result<Self> {
-        // Strip optional null terminator for parsing.
-        let data = if addr.last() == Some(&0) {
-            &addr[..addr.len() - 1]
-        } else {
-            addr
-        };
-
-        // Find the colon separating IP and port.
-        let colon_pos = find_byte(data, b':').ok_or(AmigaError::IoError(0))?;
-        let ip_part = &data[..colon_pos];
-        let port_part = &data[colon_pos + 1..];
-
-        // Parse four octets separated by dots.
-        let ip = parse_ipv4(ip_part)?;
-
-        // Parse port number.
-        let port = parse_u16(port_part)?;
-
+        let (ip, port) = crate::parse::parse_socket_addr(addr)?;
         Ok(Self { ip, port })
     }
-}
-
-// ---------------------------------------------------------------------------
-// Parsing helpers
-// ---------------------------------------------------------------------------
-
-fn find_byte(data: &[u8], needle: u8) -> Option<usize> {
-    let mut i = 0;
-    while i < data.len() {
-        if data[i] == needle {
-            return Some(i);
-        }
-        i += 1;
-    }
-    None
-}
-
-fn parse_ipv4(data: &[u8]) -> Result<[u8; 4]> {
-    let mut octets = [0u8; 4];
-    let mut octet_idx = 0usize;
-    let mut acc: u16 = 0;
-    let mut digits = 0u8;
-
-    for &b in data {
-        if b == b'.' {
-            if digits == 0 || octet_idx >= 3 || acc > 255 {
-                return Err(AmigaError::IoError(0));
-            }
-            octets[octet_idx] = acc as u8;
-            octet_idx += 1;
-            acc = 0;
-            digits = 0;
-        } else if b >= b'0' && b <= b'9' {
-            acc = acc * 10 + (b - b'0') as u16;
-            digits += 1;
-            if digits > 3 || acc > 255 {
-                return Err(AmigaError::IoError(0));
-            }
-        } else {
-            return Err(AmigaError::IoError(0));
-        }
-    }
-
-    // Final octet
-    if digits == 0 || octet_idx != 3 || acc > 255 {
-        return Err(AmigaError::IoError(0));
-    }
-    octets[3] = acc as u8;
-
-    Ok(octets)
-}
-
-fn parse_u16(data: &[u8]) -> Result<u16> {
-    if data.is_empty() {
-        return Err(AmigaError::IoError(0));
-    }
-    let mut acc: u32 = 0;
-    for &b in data {
-        if b >= b'0' && b <= b'9' {
-            acc = acc * 10 + (b - b'0') as u32;
-            if acc > 65535 {
-                return Err(AmigaError::IoError(0));
-            }
-        } else {
-            return Err(AmigaError::IoError(0));
-        }
-    }
-    Ok(acc as u16)
 }
 
 // ---------------------------------------------------------------------------
@@ -610,52 +527,15 @@ impl Drop for TcpListener {
 mod tests {
     use super::*;
 
+    // Parsing edge cases live in `crate::parse` (host-testable); here we
+    // only smoke-test the delegation and the FFI-facing layout.
+
     #[test]
-    fn parse_socket_addr() {
+    fn parse_socket_addr_delegates() {
         let addr = SocketAddr::parse(b"127.0.0.1:8080").unwrap();
         assert_eq!(addr.ip, [127, 0, 0, 1]);
         assert_eq!(addr.port, 8080);
-    }
-
-    #[test]
-    fn parse_socket_addr_nul_terminated() {
-        let addr = SocketAddr::parse(b"10.0.0.1:80\0").unwrap();
-        assert_eq!(addr.ip, [10, 0, 0, 1]);
-        assert_eq!(addr.port, 80);
-    }
-
-    #[test]
-    fn parse_socket_addr_max_octets() {
-        let addr = SocketAddr::parse(b"255.255.255.255:65535").unwrap();
-        assert_eq!(addr.ip, [255, 255, 255, 255]);
-        assert_eq!(addr.port, 65535);
-    }
-
-    #[test]
-    fn parse_socket_addr_zero() {
-        let addr = SocketAddr::parse(b"0.0.0.0:0").unwrap();
-        assert_eq!(addr.ip, [0, 0, 0, 0]);
-        assert_eq!(addr.port, 0);
-    }
-
-    #[test]
-    fn parse_socket_addr_no_colon() {
         assert!(SocketAddr::parse(b"127.0.0.1").is_err());
-    }
-
-    #[test]
-    fn parse_socket_addr_invalid_octet() {
-        assert!(SocketAddr::parse(b"256.0.0.1:80").is_err());
-    }
-
-    #[test]
-    fn parse_socket_addr_port_overflow() {
-        assert!(SocketAddr::parse(b"1.2.3.4:99999").is_err());
-    }
-
-    #[test]
-    fn parse_socket_addr_empty() {
-        assert!(SocketAddr::parse(b"").is_err());
     }
 
     #[test]
@@ -663,70 +543,6 @@ mod tests {
         let a = SocketAddr::any(1234);
         assert_eq!(a.ip, [0, 0, 0, 0]);
         assert_eq!(a.port, 1234);
-    }
-
-    // ---- IPv4 parsing edge cases ----
-
-    #[test]
-    fn parse_ipv4_one_octet() {
-        assert!(parse_ipv4(b"1").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_three_octets() {
-        assert!(parse_ipv4(b"1.2.3").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_five_octets() {
-        assert!(parse_ipv4(b"1.2.3.4.5").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_leading_dot() {
-        assert!(parse_ipv4(b".1.2.3").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_trailing_dot() {
-        assert!(parse_ipv4(b"1.2.3.").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_double_dot() {
-        assert!(parse_ipv4(b"1..2.3").is_err());
-    }
-
-    #[test]
-    fn parse_ipv4_non_digit() {
-        assert!(parse_ipv4(b"1.2.a.3").is_err());
-    }
-
-    // ---- u16 parsing edge cases ----
-
-    #[test]
-    fn parse_u16_empty() {
-        assert!(parse_u16(b"").is_err());
-    }
-
-    #[test]
-    fn parse_u16_zero() {
-        assert_eq!(parse_u16(b"0").unwrap(), 0);
-    }
-
-    #[test]
-    fn parse_u16_max() {
-        assert_eq!(parse_u16(b"65535").unwrap(), 65535);
-    }
-
-    #[test]
-    fn parse_u16_overflow() {
-        assert!(parse_u16(b"65536").is_err());
-    }
-
-    #[test]
-    fn parse_u16_non_digit() {
-        assert!(parse_u16(b"80ab").is_err());
     }
 
     // ---- SockAddrIn layout ----

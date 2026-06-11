@@ -68,8 +68,9 @@ pub struct AmigaLock {
 impl AmigaLock {
     /// Obtain a shared (read) lock on `path`. `path` must be null-terminated.
     pub fn shared(path: &[u8]) -> Result<Self> {
+        let path_ptr = crate::cstr::require_nul(path)?;
         let raw = unsafe {
-            amigaos4_sys::dos_lock(path.as_ptr() as CONST_STRPTR, SHARED_LOCK)
+            amigaos4_sys::dos_lock(path_ptr as CONST_STRPTR, SHARED_LOCK)
         };
         if raw == 0 {
             let err = unsafe { amigaos4_sys::dos_io_err() };
@@ -81,8 +82,9 @@ impl AmigaLock {
 
     /// Obtain an exclusive (write) lock on `path`. `path` must be null-terminated.
     pub fn exclusive(path: &[u8]) -> Result<Self> {
+        let path_ptr = crate::cstr::require_nul(path)?;
         let raw = unsafe {
-            amigaos4_sys::dos_lock(path.as_ptr() as CONST_STRPTR, EXCLUSIVE_LOCK)
+            amigaos4_sys::dos_lock(path_ptr as CONST_STRPTR, EXCLUSIVE_LOCK)
         };
         if raw == 0 {
             let err = unsafe { amigaos4_sys::dos_io_err() };
@@ -170,9 +172,14 @@ impl Drop for AmigaLock {
 
 /// Extract the filename component from a path.
 ///
-/// Wraps `dos_file_part`. `path` must be null-terminated.
+/// Wraps `dos_file_part`. `path` must be null-terminated; if the
+/// terminator is missing, `path` is returned unchanged instead of
+/// being handed to DOS (which would read out of bounds).
 /// Returns a sub-slice of `path` starting at the filename.
 pub fn file_part(path: &[u8]) -> &[u8] {
+    if path.last() != Some(&0) {
+        return path;
+    }
     let path_ptr = path.as_ptr() as CONST_STRPTR;
     let result = unsafe { amigaos4_sys::dos_file_part(path_ptr) };
     if result.is_null() {
@@ -199,9 +206,14 @@ pub fn file_part(path: &[u8]) -> &[u8] {
 
 /// Extract the directory component from a path.
 ///
-/// Wraps `dos_path_part`. `path` must be null-terminated.
+/// Wraps `dos_path_part`. `path` must be null-terminated; if the
+/// terminator is missing, `path` is returned unchanged instead of
+/// being handed to DOS (which would read out of bounds).
 /// Returns a sub-slice of `path` up to (but not including) the filename.
 pub fn path_part(path: &[u8]) -> &[u8] {
+    if path.last() != Some(&0) {
+        return path;
+    }
     let path_ptr = path.as_ptr() as CONST_STRPTR;
     let result = unsafe { amigaos4_sys::dos_path_part(path_ptr) };
     if result.is_null() {

@@ -30,9 +30,11 @@ pub fn current_dir() -> Result<Vec<u8>> {
 }
 
 /// Get an environment variable by name. `name` must be null-terminated.
-/// Returns `None` if the variable is not set.
+/// Returns `None` if the variable is not set (or if `name` is missing its
+/// `\0` terminator — build it with [`amstr!`](crate::amstr)).
 pub fn var(name: &[u8]) -> Option<Vec<u8>> {
-    let ptr = unsafe { getenv(name.as_ptr()) };
+    let name_ptr = crate::cstr::require_nul(name).ok()?;
+    let ptr = unsafe { getenv(name_ptr) };
     if ptr.is_null() {
         None
     } else {

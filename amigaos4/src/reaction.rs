@@ -248,13 +248,14 @@ pub const LABEL_CLASS: &[u8] = b"label.image\0";
 ///
 /// # Errors
 ///
-/// Returns `Err(AllocationFailed)` if the BOOPSI object could not be
-/// created.
+/// Returns `Err(NotNulTerminated)` if `label` is missing its `\0`, or
+/// `Err(AllocationFailed)` if the BOOPSI object could not be created.
 pub fn button(id: u32, label: &[u8]) -> Result<AmigaObject> {
+    let label_ptr = crate::cstr::require_nul(label)?;
     let tags = crate::tag::TagListBuilder::new()
         .tag(GA_ID, id)
         .tag(GA_RELVERIFY, 1)
-        .tag(GA_TEXT, label.as_ptr() as u32)
+        .tag(GA_TEXT, label_ptr as u32)
         .build();
     AmigaObject::new(BUTTON_CLASS, &tags)
 }
@@ -333,6 +334,9 @@ pub fn checkbox(id: u32, checked: bool) -> Result<AmigaObject> {
 pub struct LayoutBuilder {
     tags: Vec<TagItem>,
     orientation: u32,
+    /// Set when a label passed to [`add_labeled`](Self::add_labeled) was
+    /// not null-terminated; surfaced as an error in [`build`](Self::build).
+    invalid_label: bool,
 }
 
 impl LayoutBuilder {
@@ -343,6 +347,7 @@ impl LayoutBuilder {
         Self {
             tags: Vec::new(),
             orientation: LAYOUT_ORIENT_VERT,
+            invalid_label: false,
         }
     }
 
@@ -353,6 +358,7 @@ impl LayoutBuilder {
         Self {
             tags: Vec::new(),
             orientation: LAYOUT_ORIENT_HORIZ,
+            invalid_label: false,
         }
     }
 
@@ -371,17 +377,23 @@ impl LayoutBuilder {
 
     /// Add a child gadget with a text label displayed beside it.
     ///
-    /// `label` must be a null-terminated byte string (e.g. `b"Name:\0"`).
+    /// `label` must be a null-terminated byte string (e.g. `b"Name:\0"`,
+    /// or built with [`amstr!`](crate::amstr)). A label missing its `\0`
+    /// causes [`build`](Self::build) to fail with `NotNulTerminated`.
     /// Ownership of `child` is transferred to the layout.
     pub fn add_labeled(mut self, child: AmigaObject, label: &[u8]) -> Self {
         self.tags.push(TagItem {
             ti_Tag: LAYOUT_ADD_CHILD,
             ti_Data: child.into_raw() as u32,
         });
-        self.tags.push(TagItem {
-            ti_Tag: CHILD_LABEL,
-            ti_Data: label.as_ptr() as u32,
-        });
+        if label.last() == Some(&0) {
+            self.tags.push(TagItem {
+                ti_Tag: CHILD_LABEL,
+                ti_Data: label.as_ptr() as u32,
+            });
+        } else {
+            self.invalid_label = true;
+        }
         self
     }
 
@@ -394,9 +406,13 @@ impl LayoutBuilder {
     ///
     /// # Errors
     ///
-    /// Returns `Err(AllocationFailed)` if the BOOPSI object could not be
-    /// created.
+    /// Returns `Err(NotNulTerminated)` if any label passed to
+    /// [`add_labeled`](Self::add_labeled) was missing its `\0`, or
+    /// `Err(AllocationFailed)` if the BOOPSI object could not be created.
     pub fn build(mut self) -> Result<AmigaObject> {
+        if self.invalid_label {
+            return Err(crate::error::AmigaError::NotNulTerminated);
+        }
         let mut final_tags = Vec::with_capacity(4 + self.tags.len());
         final_tags.push(TagItem {
             ti_Tag: LAYOUT_ORIENTATION,

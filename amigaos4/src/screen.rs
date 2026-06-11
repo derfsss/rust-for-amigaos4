@@ -13,10 +13,11 @@ pub struct PubScreen {
 }
 
 impl PubScreen {
-    /// Lock a public screen by name. Pass `None` for the default (Workbench) screen.
+    /// Lock a public screen by name. Pass `None` for the default (Workbench)
+    /// screen. A `Some` name must be null-terminated.
     pub fn lock(name: Option<&[u8]>) -> Result<Self> {
         let name_ptr = match name {
-            Some(s) => s.as_ptr() as CONST_STRPTR,
+            Some(s) => crate::cstr::require_nul(s)? as CONST_STRPTR,
             None => core::ptr::null(),
         };
         let ptr = unsafe { amigaos4_sys::intuition_lock_pub_screen(name_ptr) };

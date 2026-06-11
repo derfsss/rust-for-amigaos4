@@ -13,6 +13,13 @@ pub enum AmigaError {
     DosError(i32),
     /// A read or write operation hit EOF before completing.
     UnexpectedEof,
+    /// A byte-string argument was missing its trailing `\0`.
+    ///
+    /// OS-string arguments must be null-terminated; build them with
+    /// [`amstr!`](crate::amstr) to get the terminator at compile time.
+    NotNulTerminated,
+    /// A hostname could not be resolved to any address.
+    HostNotFound,
 }
 
 impl fmt::Display for AmigaError {
@@ -23,6 +30,10 @@ impl fmt::Display for AmigaError {
             AmigaError::IoError(e) => write!(f, "I/O error (errno={})", e),
             AmigaError::DosError(e) => write!(f, "DOS error ({})", e),
             AmigaError::UnexpectedEof => write!(f, "unexpected end of file"),
+            AmigaError::NotNulTerminated => {
+                write!(f, "byte string is not null-terminated (use amstr!)")
+            }
+            AmigaError::HostNotFound => write!(f, "host not found"),
         }
     }
 }
@@ -134,6 +145,21 @@ mod tests {
     }
 
     #[test]
+    fn display_not_nul_terminated() {
+        let e = AmigaError::NotNulTerminated;
+        assert_eq!(
+            format!("{}", e),
+            "byte string is not null-terminated (use amstr!)"
+        );
+    }
+
+    #[test]
+    fn display_host_not_found() {
+        let e = AmigaError::HostNotFound;
+        assert_eq!(format!("{}", e), "host not found");
+    }
+
+    #[test]
     fn all_variants_distinct() {
         let variants: &[AmigaError] = &[
             AmigaError::NullPointer,
@@ -141,6 +167,8 @@ mod tests {
             AmigaError::IoError(0),
             AmigaError::DosError(0),
             AmigaError::UnexpectedEof,
+            AmigaError::NotNulTerminated,
+            AmigaError::HostNotFound,
         ];
         for i in 0..variants.len() {
             for j in (i + 1)..variants.len() {

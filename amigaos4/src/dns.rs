@@ -41,12 +41,14 @@ extern "C" {
 ///
 /// # Errors
 ///
-/// Returns [`AmigaError::NullPointer`] if the name cannot be resolved or the
-/// result contains no addresses.
+/// Returns [`AmigaError::NotNulTerminated`] if `hostname` is missing its
+/// `\0`, and [`AmigaError::HostNotFound`] if the name cannot be resolved
+/// or the result contains no IPv4 addresses.
 pub fn resolve(hostname: &[u8]) -> Result<Vec<[u8; 4]>> {
-    let he = unsafe { gethostbyname(hostname.as_ptr()) };
+    let name_ptr = crate::cstr::require_nul(hostname)?;
+    let he = unsafe { gethostbyname(name_ptr) };
     if he.is_null() {
-        return Err(AmigaError::NullPointer);
+        return Err(AmigaError::HostNotFound);
     }
 
     let mut addrs = Vec::new();
@@ -54,11 +56,11 @@ pub fn resolve(hostname: &[u8]) -> Result<Vec<[u8; 4]>> {
         // Only IPv4 results are supported — each address must be 4 octets,
         // otherwise the fixed-size reads below would over- or under-read.
         if (*he).h_length != 4 {
-            return Err(AmigaError::NullPointer);
+            return Err(AmigaError::HostNotFound);
         }
         let list = (*he).h_addr_list;
         if list.is_null() {
-            return Err(AmigaError::NullPointer);
+            return Err(AmigaError::HostNotFound);
         }
         let mut i = 0usize;
         while !(*list.add(i)).is_null() {
@@ -80,7 +82,7 @@ pub fn resolve(hostname: &[u8]) -> Result<Vec<[u8; 4]>> {
     }
 
     if addrs.is_empty() {
-        Err(AmigaError::NullPointer)
+        Err(AmigaError::HostNotFound)
     } else {
         Ok(addrs)
     }

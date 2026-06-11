@@ -22,11 +22,12 @@ impl AmigaCatalog {
     /// Passes `NULL` for the locale parameter (uses the system default locale)
     /// and an empty tag list.
     pub fn open(name: &[u8]) -> Result<Self> {
+        let name_ptr = crate::cstr::require_nul(name)?;
         let tags = [TagItem { ti_Tag: TAG_DONE, ti_Data: 0 }];
         let ptr = unsafe {
             amigaos4_sys::locale_open_catalog_a(
                 core::ptr::null_mut(),
-                name.as_ptr() as CONST_STRPTR,
+                name_ptr as CONST_STRPTR,
                 tags.as_ptr(),
             )
         };
@@ -41,16 +42,19 @@ impl AmigaCatalog {
     ///
     /// `default` must be null-terminated. The returned slice is valid for the
     /// lifetime of this catalog (or is the `default` pointer if no translation
-    /// exists).
+    /// exists). If `default` is missing its terminator, `NULL` is passed to
+    /// the OS instead (the lookup still works; an untranslated ID falls back
+    /// to returning `default` unchanged).
     ///
     /// The returned `&[u8]` does not include the trailing null.
     pub fn get<'a>(&'a self, id: i32, default: &'a [u8]) -> &'a [u8] {
+        let default_ptr = if default.last() == Some(&0) {
+            default.as_ptr() as CONST_STRPTR
+        } else {
+            core::ptr::null()
+        };
         let result = unsafe {
-            amigaos4_sys::locale_get_catalog_str(
-                self.ptr,
-                id,
-                default.as_ptr() as CONST_STRPTR,
-            )
+            amigaos4_sys::locale_get_catalog_str(self.ptr, id, default_ptr)
         };
         if result.is_null() {
             // Strip trailing null from default if present.

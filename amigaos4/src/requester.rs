@@ -61,7 +61,12 @@ pub fn easy_request(title: &[u8], body: &[u8], gadgets: &[u8]) -> i32 {
 ///
 /// If `window` is null, the requester appears on the default public screen.
 /// See [`easy_request`] for return values and string requirements.
+/// Returns `-1` (the could-not-create code) if any string argument is
+/// missing its `\0` terminator.
 pub fn easy_request_on(window: *mut Window, title: &[u8], body: &[u8], gadgets: &[u8]) -> i32 {
+    if title.last() != Some(&0) || body.last() != Some(&0) || gadgets.last() != Some(&0) {
+        return -1;
+    }
     let es = EasyStructData {
         es_struct_size: core::mem::size_of::<EasyStructData>() as u32,
         es_flags: 0,

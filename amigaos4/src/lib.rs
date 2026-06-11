@@ -30,6 +30,7 @@
 extern crate alloc;
 
 // Always available (pure Rust or Exec-only, no clib4 dependency):
+pub mod cstr;
 pub mod error;
 pub mod tag;
 pub mod mem;
@@ -48,6 +49,10 @@ pub mod locale;
 pub mod async_rt;
 pub mod timer;
 pub mod clipboard;
+
+// Internal: pure parsing helpers for the network modules. Always compiled
+// (the modules using it are PPC-only) so its tests run on host cargo test.
+pub(crate) mod parse;
 
 // Application-only (require clib4 POSIX functions). Doubly gated: the
 // user must opt in via the feature *and* the build must be for the PPC
