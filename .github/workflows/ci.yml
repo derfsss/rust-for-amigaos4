@@ -150,6 +150,12 @@ jobs:
       - name: Build examples/https-client (link to ELF)
         run: ./build.sh examples/https-client
 
+      - name: Build examples/sqlite3-demo (link to ELF)
+        run: ./build.sh examples/sqlite3-demo
+
+      - name: Build examples/json-config (link to ELF)
+        run: ./build.sh examples/json-config
+
       # ── Verify each example produced a PPC ELF ───────────────────
       # Cheap insurance against `make all` silently no-op'ing.
       - name: Verify ELF outputs
