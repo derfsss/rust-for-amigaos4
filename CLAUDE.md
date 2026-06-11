@@ -60,6 +60,14 @@ fs, time, env, thread, net, dns, http, https (tls feature)
   timer + IDCMP futures; `DmaBuffer`; HTTP redirects + chunked;
   ram-device (a complete exec .device) and aminet-browser examples;
   rustdoc publishing workflow.
+- v0.7.0 (2026-06-11, GitHub release with prebuilt-examples zip):
+  `https`/`TlsStream` over the clib4-built OpenSSL (`tls` feature);
+  `datatypes::DtPicture`; clib4-userland examples (sqlite3-demo,
+  json-config); gameboy-test proving unmodified crates.io code
+  (padme-core passes Blargg cpu_instrs 11/11 on QEMU). Real-hardware
+  validation on the X5000 (51/51 + 5/5 + driver mode). The clib4 apt
+  repo (clib4pkg.amigasoft.net) fixes the SDK's broken libcurl
+  (curl7-clib4) — see roadmap for the /usr-vs-/opt SDK path gotcha.
 
 ## Conventions
 

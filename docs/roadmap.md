@@ -1,6 +1,8 @@
 # Rust for AmigaOS 4 — Roadmap
 
-Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
+Last updated: 2026-06-11 (post-1.0 improvement plan complete; v0.7.0
+released with artifacts; real-hardware validated on X5000; third-party
+crates proven via padme-core/Blargg in examples/gameboy-test)
 
 ## Current State
 
@@ -283,6 +285,13 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   vorbis/opus/mp3lame/sndfile, ncursesw/readline, pcre2, lua 5.4,
   libffi, boost, icu, gmp/mpfr, lz4/zstd, c-ares, nghttp2/3 — plus
   the clib4 apt repository (above) for newer/missing packages.
+- [x] **Third-party crates.io code** — `examples/gameboy-test` compiles
+  padme-core (a complete no_std Game Boy emulator) unmodified and
+  passes Blargg's full cpu_instrs hardware-accuracy suite on QEMU
+  (11/11). Surfaced and documented the 64 KB default-shell-stack
+  limit + the `$STACK:` cookie pattern (README troubleshooting).
+  Natural showcase next step: a `Screen` impl over `AmigaWindow` for
+  a playable emulator.
 
 ### D. Driver story
 
