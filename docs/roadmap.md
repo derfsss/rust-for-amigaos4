@@ -4,16 +4,16 @@ Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
 
 ## Current State
 
-- 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (29 safe wrapper modules)
+- 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (31 safe wrapper modules)
 - Three build modes: application (clib4 + `-lauto`), driver (no CRT, ExecAllocator), shared library (Resident + interface vectors)
 - Build infrastructure: `build.sh`/`build.bat`, Docker-based linking, fake linker trick
-- CI pipeline: GitHub Actions cross-compiles all crates + 24 examples, runs host tests for all 3 crates; rustdoc published via Pages
+- CI pipeline: GitHub Actions cross-compiles all crates + 27 examples, runs host tests for all 3 crates; rustdoc published via Pages
 - **~365 total tests**: 308 host-side (213 amigaos4 unit + 3 doctests + 5 sys + 2 alloc + 85 black-box in `Tests/`), 60 target-side (51 main + 5 GUI + 4 net). In-source tests of the clib4 POSIX modules compile only for the PPC target; their behaviour is exercised by the target-side harnesses.
 - `serial_println!` macro for formatted debug output via `core::fmt::Write`
 - Reusable panic handler with file/line/message output
 - `cargo-amiga.sh`/`.bat` wrapper for project scaffolding, builds, and deploy/run/test on fleet targets
 - 3 templates: app, driver, library
-- 24 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser
+- 27 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config
 - Tested on QEMU (`-M amigaone`) and real X5000 hardware (P5020, Kickstart 54.57)
 - All code is `no_std`; `Vec`, `String`, `format!`, `Box` work via global allocator
 - C glue for 5 varargs-only SDK methods
@@ -49,7 +49,7 @@ See `docs/phase1-progress.md` for full details and issues log.
 - [x] **Alignment audit for ExecAllocator** — Both allocators now handle >16-byte alignment via over-allocation; overflow check added
 - [x] **Test suite (host-side)** — 61 unit tests across error, time, tag, io modules; ppc_asm gated for host compilation
 - [x] **Test harness (target-side)** — `examples/test-harness/` with 8 OS-call tests (Vec, String, TagList, AmigaVec, MsgPort, Duration, file I/O, env)
-- [ ] **Real hardware testing** — Deferred (requires physical Amiga hardware; community ask)
+- [x] **Real hardware testing** — Completed 2026-06-11 on an X5000 (see the post-1.0 improvement plan, section B)
 
 ---
 
@@ -104,7 +104,7 @@ See `docs/phase5-progress.md` for full details.
 - [x] **DNS resolution** — `resolve()` via gethostbyname with safety cap
 - [x] **HTTP client** — `http::get()` for HTTP/1.1 GET requests, `HttpResponse` with status code + body
 - [x] **Network example** — `examples/net-demo/` with DNS, TCP, and HTTP demos
-- [ ] **TLS** — Deferred (AmiSSL integration too complex for this phase)
+- [x] **TLS** — Completed post-1.0 via the clib4-built OpenSSL (`amigaos4::https`, see the post-1.0 improvement plan, section C)
 
 ---
 
@@ -262,20 +262,27 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   `AmigaWindow::next_event()` futures; the executor waits on registered
   external signals, so one executor selects over sockets, timers, and
   GUI input.
-- [x] **More wrappers (partial)** — application.library registration
+- [x] **More wrappers** — application.library registration
   (`AppRegistration`, single-instance); AHI actual playback
   (`examples/audio-tone` plays a synthesised tone via CMD_WRITE,
-  verified on QEMU). Remaining: datatypes beyond load/query.
-- [ ] **clib4 userland integration** — the Docker SDK's
-  `SDK/local/clib4/` carries clib4-built static libs ready to link
-  into application-mode Rust via extern FFI + Makefile `-l` flags:
-  sqlite3, jansson (JSON), libxml2/expat/yaml, libpng/jpeg/tiff/webp/
-  gif, freetype/harfbuzz/cairo/pixman/fontconfig, SDL2 (+image/mixer/
-  ttf/net, gl4es GL), ffmpeg (avcodec/avformat), FLAC/ogg/vorbis/opus/
-  mp3lame/sndfile, ncursesw/readline, pcre2, lua 5.4, libffi, boost,
-  icu, gmp/mpfr, zip/lz4/zstd-family, c-ares, nghttp2/3. Candidate
-  next examples: sqlite3-demo, json-config (jansson), sdl2-demo.
-  (`zlib-roundtrip` already demonstrates the pattern with `-lz`.)
+  verified on QEMU); `datatypes::DtPicture` (RAII load + attribute
+  query over a runtime-opened datatypes.library, used by
+  `picture-viewer`). Rendering (`DTM_PROCLAYOUT`/`DTM_DRAW`) remains
+  reachable via `DtPicture::as_ptr()` + the BOOPSI method helpers.
+- [x] **clib4 userland integration (pattern established)** — the
+  Docker SDK's `SDK/local/clib4/` carries clib4-built static libs
+  ready to link into application-mode Rust via extern FFI + Makefile
+  `-l` flags. Demonstrated and QEMU-verified by `examples/sqlite3-demo`
+  (in-memory DB, prepare/step/column, `-lsqlite3 -lm`) and
+  `examples/json-config` (jansson parse + dumps round-trip,
+  `-ljansson`), alongside the existing `zlib-roundtrip` (`-lz`) and
+  `https-client` (`-lssl -lcrypto`). Still available, same pattern:
+  libxml2/expat/yaml, libpng/jpeg/tiff/webp/gif, freetype/harfbuzz/
+  cairo/pixman/fontconfig, SDL2 (+image/mixer/ttf/net, gl4es GL —
+  needs a display, so not headless-verifiable), ffmpeg, FLAC/ogg/
+  vorbis/opus/mp3lame/sndfile, ncursesw/readline, pcre2, lua 5.4,
+  libffi, boost, icu, gmp/mpfr, lz4/zstd, c-ares, nghttp2/3 — plus
+  the clib4 apt repository (above) for newer/missing packages.
 
 ### D. Driver story
 

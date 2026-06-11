@@ -2,7 +2,7 @@
 
 Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust.
 
-**Status: Beta** — 30 safe wrapper modules, 129 SDK interface bindings, ~365 tests, 3 build modes. Tested on QEMU (`-M amigaone`) **and real X5000 hardware**.
+**Status: Beta** — 31 safe wrapper modules, 129 SDK interface bindings, ~365 tests, 3 build modes. Tested on QEMU (`-M amigaone`) **and real X5000 hardware**.
 
 > **Made with AI** — This project (code, bindings, build infrastructure, and documentation) was built using [Claude Code](https://claude.ai/claude-code) by Anthropic.
 
@@ -13,7 +13,7 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **Full `no_std` Rust** — `core` and `alloc` crates compile to PowerPC
 - **`Vec`, `String`, `format!`, `Box`** — heap allocation via global allocator
 - **Three build modes** — application (clib4), driver (ExecAllocator), shared library (Resident + interface vectors)
-- **30 safe wrapper modules** — GUI (ReAction), menus, ASL file requesters, networking (TCP/DNS/HTTP/HTTPS), async runtime, timer device, clipboard (IFFParse), DOS, file I/O, threads, and more
+- **31 safe wrapper modules** — GUI (ReAction), menus, ASL file requesters, networking (TCP/DNS/HTTP/HTTPS), async runtime, timer device, clipboard (IFFParse), DOS, file I/O, threads, and more
 - **129 AmigaOS SDK interface bindings** — Exec, DOS, Intuition, Graphics, Timer, IFFParse, and 123 more, all feature-gated
 - **Direct vtable dispatch** — call any interface method from Rust via `#[repr(C)]` structs (no overhead)
 - **RAII everywhere** — `AmigaWindow`, `AmigaTimer`, `AmigaLock`, `AmigaVec`, `TcpStream`, `PubScreen`, and 14 more auto-cleanup on drop
@@ -30,7 +30,7 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **Exec device support** — `examples/ram-device` is a complete `.device` (BeginIO/AbortIO, quick I/O) in Rust; `DmaBuffer` pairs MEMF_SHARED with cache maintenance
 - **PPC inline assembly** — cache flush/invalidate, MMIO read/write (8/16/32-bit), memory barriers
 - **~365 tests** — host-side per-crate unit tests, doctests, and the black-box suite in `Tests/`, plus 60 target-side integration tests run on QEMU
-- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 25 examples, runs host tests, publishes rustdoc
+- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 27 examples, runs host tests, publishes rustdoc
 
 ---
 
@@ -190,27 +190,27 @@ Driver-mode (`hello-driver`) and shared-library-mode binaries do not need `clib4
 rust-for-amigaos4/
   amigaos4-sys/       Raw FFI bindings (129 feature-gated interfaces, C glue, PPC asm)
   amigaos4-alloc/     Global allocator backends (Clib4Allocator, ExecAllocator)
-  amigaos4/           Safe wrappers: 30 modules (GUI, menus, ASL, networking, async, DOS, timer, clipboard, POSIX)
+  amigaos4/           Safe wrappers: 31 modules (GUI, menus, ASL, networking, async, DOS, timer, clipboard, POSIX)
   clib4-nightly/      Pre-built clib4 C library overlay (binaries only)
   clib4-src/          clib4 source pinned via submodule at commit 778afb03 (development tip)
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01) used for all builds
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates
-  examples/           25 examples (hello, hello-driver, hello-library, test-harness,
+  examples/           27 examples (hello, hello-driver, hello-library, test-harness,
                       test-harness-gui, test-harness-net, file-io-demo, timer-demo,
                       thread-demo, gui-demo, net-demo, async-demo,
                       thread-amissl-probe, http-client, zlib-roundtrip,
                       picture-viewer, wbstartup-hello, xadmaster-list,
-                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client)
+                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
-  .github/workflows/  CI pipeline (builds all crates + 25 examples, runs host tests)
+  .github/workflows/  CI pipeline (builds all crates + 27 examples, runs host tests)
   cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 
-## amigaos4 Crate — 30 Modules
+## amigaos4 Crate — 31 Modules
 
 **Core (always available, no clib4 needed):**
-application, asl, cstr, error, tag, mem, port, screen, boopsi, window, gfx, requester, reaction, dos, locale, io, fmt, menu, panic, async_rt, timer, clipboard
+application, asl, cstr, datatypes, error, tag, mem, port, screen, boopsi, window, gfx, requester, reaction, dos, locale, io, fmt, menu, panic, async_rt, timer, clipboard
 
 **Application-only (clib4, feature-gated):**
 fs, time, env, thread, net, dns, http, https (tls feature)

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased 0.7.0]
+## [0.7.0] - 2026-06-11
 
 ### Added
 - `https` module (feature `tls`, link `-lssl -lcrypto -lz`): `TlsStream`
@@ -13,7 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   verification via `TlsConfig`) and `https::get()` with https-redirect
   following and chunked decoding. Verified end-to-end on QEMU
   (`examples/https-client`: status 200 from https://example.com).
+- `datatypes` module: `DtPicture` — RAII picture loading + attribute
+  query (`dimensions()`, `get_attr()`) over a runtime-opened
+  datatypes.library; `picture-viewer` now uses it.
 - `parse::parse_url`: scheme-aware (`http`/`https`) URL parsing.
+- Examples: `sqlite3-demo` and `json-config` — the clib4-userland FFI
+  pattern (link the SDK's clib4-built `libsqlite3.a` / `libjansson.a`),
+  both QEMU-verified.
 
 ## [0.6.0] - 2026-06-11
 
