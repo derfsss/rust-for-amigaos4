@@ -4,7 +4,7 @@
 
 Rust for AmigaOS 4 — Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust (`no_std`).
 
-**All 10 roadmap phases complete. ~285 tests, 25 modules, 3 templates, shared library output.**
+**All 10 roadmap phases complete. ~365 tests, 29 modules, 3 templates, shared library output.**
 
 ## Repository Layout
 
@@ -12,27 +12,27 @@ Rust for AmigaOS 4 — Write native AmigaOS 4.1 applications, device drivers, an
 rust-for-amigaos4/
   amigaos4-sys/       Raw FFI bindings (129 feature-gated interfaces, C glue, PPC asm)
   amigaos4-alloc/     Global allocator backends (Clib4Allocator, ExecAllocator)
-  amigaos4/           Safe wrappers: 25 modules (GUI, networking, async, DOS, timer, clipboard, POSIX)
+  amigaos4/           Safe wrappers: 29 modules (GUI, menus, ASL, networking, async, DOS, timer, clipboard, POSIX)
   clib4-nightly/      Pre-built clib4 C library overlay (binaries only)
   clib4-src/          clib4 source pinned via submodule at commit 778afb03 (development tip)
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01)
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates
-  examples/           23 examples (hello, hello-driver, hello-library, test-harness,
+  examples/           24 examples (hello, hello-driver, hello-library, test-harness,
                       test-harness-gui, test-harness-net, file-io-demo, timer-demo,
                       thread-demo, gui-demo, net-demo, async-demo,
                       thread-amissl-probe, http-client, zlib-roundtrip,
                       picture-viewer, wbstartup-hello, xadmaster-list,
-                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device)
+                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
-  .github/workflows/  CI pipeline (builds all crates + 23 examples, runs host tests)
+  .github/workflows/  CI pipeline (builds all crates + 24 examples, runs host tests)
   cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 
-## amigaos4 Crate Modules (25 total)
+## amigaos4 Crate Modules (29 total)
 
 **Core (always available):**
-error, tag, mem, port, screen, boopsi, window, gfx, requester, reaction, dos, locale, io, fmt, panic, async_rt, timer, clipboard
+application, asl, cstr, error, tag, mem, port, screen, boopsi, window, gfx, requester, reaction, dos, locale, io, fmt, menu, panic, async_rt, timer, clipboard
 
 **Application-only (clib4, feature-gated):**
 fs, time, env, thread, net, dns, http

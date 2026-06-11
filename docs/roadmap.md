@@ -1,19 +1,19 @@
 # Rust for AmigaOS 4 — Roadmap
 
-Last updated: 2026-04-14 (post-Phase-10 hardening)
+Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
 
 ## Current State
 
-- 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (25 safe wrapper modules)
+- 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (29 safe wrapper modules)
 - Three build modes: application (clib4 + `-lauto`), driver (no CRT, ExecAllocator), shared library (Resident + interface vectors)
 - Build infrastructure: `build.sh`/`build.bat`, Docker-based linking, fake linker trick
-- CI pipeline: GitHub Actions cross-compiles all crates + 22 examples, runs host tests for all 3 crates
-- **~285 total tests**: 225 host-side (132 amigaos4 unit + 2 doctests + 5 sys + 2 alloc + 84 black-box in `Tests/`), 60 target-side (51 main + 5 GUI + 4 net). In-source tests of the clib4 POSIX modules compile only for the PPC target; their behaviour is exercised by the target-side harnesses.
+- CI pipeline: GitHub Actions cross-compiles all crates + 24 examples, runs host tests for all 3 crates; rustdoc published via Pages
+- **~365 total tests**: 308 host-side (213 amigaos4 unit + 3 doctests + 5 sys + 2 alloc + 85 black-box in `Tests/`), 60 target-side (51 main + 5 GUI + 4 net). In-source tests of the clib4 POSIX modules compile only for the PPC target; their behaviour is exercised by the target-side harnesses.
 - `serial_println!` macro for formatted debug output via `core::fmt::Write`
 - Reusable panic handler with file/line/message output
-- `cargo-amiga.sh`/`.bat` wrapper for project scaffolding and builds
+- `cargo-amiga.sh`/`.bat` wrapper for project scaffolding, builds, and deploy/run/test on fleet targets
 - 3 templates: app, driver, library
-- 22 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone
+- 24 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser
 - Tested on QEMU (`-M amigaone`) only
 - All code is `no_std`; `Vec`, `String`, `format!`, `Box` work via global allocator
 - C glue for 5 varargs-only SDK methods
@@ -186,6 +186,83 @@ Additions made after the 10 phases were complete:
 - **clib4 refreshed to upstream `778afb03`** — fixes a pthread
   per-thread-init crash (`clib4-nightly/` binaries + `clib4-src/` submodule pin).
 - **CI scoped to `main`** — `.github/workflows/ci.yml` triggers on `main` only.
+
+---
+
+## Post-1.0 Improvement Plan (2026-06)
+
+Outcome of the June 2026 review pass. Ordered by impact on the project's
+purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
+
+### A. Correctness & API soundness
+
+- [x] **`amstr!` + nul-termination validation** — Every safe API that takes a
+  "must be null-terminated" `&[u8]` used to pass `as_ptr()` straight to C;
+  a missing `\0` was an out-of-bounds read from safe code. Now there is a
+  compile-time `amstr!("text")` macro and runtime validation (error, not
+  UB) in every such entry point.
+- [x] **Richer `AmigaError`** — `NotNulTerminated` and `HostNotFound`
+  variants added; dns failures no longer collapse into `NullPointer`.
+- [x] **SDK-verified ReAction tags** *(found during implementation)* — every
+  gadget tag constant was wrong (invented bases/offsets, silently ignored
+  by BOOPSI); all values now match the SDK 54.16 headers, are pinned by
+  unit tests, and `IDCMP_GADGETUP` reads the real `GadgetID` from
+  `IAddress`. Verified on QEMU (GUI harness 5/5).
+
+### B. Test reality
+
+- [x] **Host-testable parsers** — pure logic lives in the always-compiled
+  `parse` module; its tests run on every host `cargo test`.
+- [x] **Target-harness smoke in Tests/** — `target_smoke.rs`, env-gated via
+  `AMIGA_TARGET_SMOKE=1`, drives `cargo-amiga test` on a fleet target.
+- [ ] **Real-hardware run** — Execute the harnesses on a physical machine
+  (X5000) and record results; the README's "not tested on real hardware"
+  caveat should eventually fall.
+
+### C. Application-essential features
+
+- [x] **Menus** — `MenuBuilder`/`MenuStrip` over OS4 menuclass;
+  `Event::MenuPick` + `each_select()` decoding.
+- [x] **ASL file requester** — `FileRequester` builder (open/save/drawer)
+  over asl.library, opened at runtime.
+- [x] **More ReAction gadgets** — listbrowser (+`ListBrowserNodes`),
+  chooser (+`ChooserLabels`), slider.
+- [x] **HTTP improvements** — follows redirects (5 hops), decodes chunked
+  transfer encoding.
+- [ ] **HTTPS via AmiSSL** — minimal blocking GET. The
+  `thread-amissl-probe` example already validates the whole init chain
+  on QEMU (master open → `InitAmiSSLMaster` → `OpenAmiSSL` →
+  `InitAmiSSLA` → `TLS_method` → `SSL_CTX_new`), and the amissl
+  bindings carry `SSL_new/set_fd/connect/read/write`. The missing
+  piece is socket plumbing: clib4 keeps its `ISocket`/fd mapping
+  internal, so the https module must open bsdsocket.library itself
+  (own `socket`/`connect`/`GetHostByName` via `ISocket`) and hand that
+  interface + native socket to AmiSSL — bypassing clib4's fd layer
+  entirely. Self-contained but a second networking path; deferred
+  until it can be target-tested end-to-end.
+- [x] **Async integration** — `timer::delay_async()` and
+  `AmigaWindow::next_event()` futures; the executor waits on registered
+  external signals, so one executor selects over sockets, timers, and
+  GUI input.
+- [x] **More wrappers (partial)** — application.library registration
+  (`AppRegistration`, single-instance); AHI actual playback
+  (`examples/audio-tone` plays a synthesised tone via CMD_WRITE,
+  verified on QEMU). Remaining: datatypes beyond load/query.
+
+### D. Driver story
+
+- [x] **Real exec device example** — `examples/ram-device`: Resident,
+  `DevInit`, `BeginIO`/`AbortIO` dispatch, CMD_READ/CMD_WRITE over a RAM
+  buffer; plus `mem::DmaBuffer` pairing MEMF_SHARED with the cache-flush
+  asm.
+
+### E. Adoption
+
+- [x] **Publish rustdoc** — `docs.yml` builds PPC-target rustdoc and
+  deploys to GitHub Pages.
+- [ ] **Tagged release with artifacts** — prebuilt examples + clib4 bundle.
+- [x] **Dogfood app** — `examples/aminet-browser`: application.library +
+  menus + listbrowser + ASL + HTTP (+ fs) in one real program.
 
 ---
 
