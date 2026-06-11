@@ -20,10 +20,10 @@ fn count_subdirs(rel: &str) -> usize {
 }
 
 #[test]
-fn examples_count_is_twenty_two() {
+fn examples_count_is_twenty_three() {
     let n = count_subdirs("examples");
-    assert_eq!(n, 22,
-        "examples/ has {} subdirs, docs claim 22", n);
+    assert_eq!(n, 23,
+        "examples/ has {} subdirs, docs claim 23", n);
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn readme_lists_all_examples_by_name() {
         "thread-amissl-probe", "http-client", "zlib-roundtrip",
         "picture-viewer", "wbstartup-hello", "xadmaster-list",
         "async-net-echo", "iff-dump", "locale-i18n-hello",
-        "audio-tone",
+        "audio-tone", "ram-device",
     ];
     let mut missing: Vec<&str> = Vec::new();
     for ex in &examples {
