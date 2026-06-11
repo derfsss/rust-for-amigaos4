@@ -276,6 +276,12 @@ _resolve_project() {
     TARGET_NAME="$(grep -E '^TARGET[[:space:]]*=' "$PROJ_DIR/Makefile" | head -1 | sed -E 's/^TARGET[[:space:]]*=[[:space:]]*//' | tr -d ' \r')"
     [ -n "$TARGET_NAME" ] || die "could not read TARGET from $PROJ_DIR/Makefile"
     EXE="$PROJ_DIR/$TARGET_NAME"
+    # The fleet CLI is a native Windows Python under MSYS/Git Bash —
+    # hand it a Windows-style path (bash's automatic conversion is
+    # disabled when MSYS_NO_PATHCONV=1 is set for build.sh's docker run).
+    if command -v cygpath >/dev/null 2>&1; then
+        EXE="$(cygpath -m "$EXE")"
+    fi
 }
 
 cmd_run() {

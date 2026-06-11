@@ -285,6 +285,7 @@ mod window_tests {
             qualifier: 0,
             mouse_x: 10,
             mouse_y: 20,
+            gadget_id: 0,
         };
         let c = m; // Copy
         assert_eq!(c.class, m.class);
