@@ -275,23 +275,35 @@ pub(crate) fn decode_chunked(body: &[u8]) -> Result<Vec<u8>> {
 // URL parsing (for HTTP redirects)
 // ---------------------------------------------------------------------------
 
-/// Components of a parsed `http://` URL. Byte slices borrow from the input.
+/// URL scheme this crate's clients can speak.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum UrlScheme {
+    Http,
+    Https,
+}
+
+/// Components of a parsed absolute URL. Byte slices borrow from the input.
 pub(crate) struct UrlParts<'a> {
+    pub scheme: UrlScheme,
     pub host: &'a [u8],
     pub port: u16,
     pub path: &'a [u8],
 }
 
-/// Parse an absolute `http://host[:port][/path]` URL.
-///
-/// Returns `None` for any other scheme (including `https`, which this
-/// client cannot speak).
-pub(crate) fn parse_http_url(url: &[u8]) -> Option<UrlParts<'_>> {
-    const PREFIX: &[u8] = b"http://";
-    if url.len() < PREFIX.len() || !eq_ignore_case(&url[..PREFIX.len()], PREFIX) {
+/// Parse an absolute `http://` or `https://` URL
+/// (`scheme://host[:port][/path]`). Returns `None` for any other scheme.
+pub(crate) fn parse_url(url: &[u8]) -> Option<UrlParts<'_>> {
+    const HTTP: &[u8] = b"http://";
+    const HTTPS: &[u8] = b"https://";
+    let (scheme, rest) = if url.len() >= HTTPS.len()
+        && eq_ignore_case(&url[..HTTPS.len()], HTTPS)
+    {
+        (UrlScheme::Https, &url[HTTPS.len()..])
+    } else if url.len() >= HTTP.len() && eq_ignore_case(&url[..HTTP.len()], HTTP) {
+        (UrlScheme::Http, &url[HTTP.len()..])
+    } else {
         return None;
-    }
-    let rest = &url[PREFIX.len()..];
+    };
     let (authority, path) = match find_byte(rest, b'/') {
         Some(p) => (&rest[..p], &rest[p..]),
         None => (rest, b"/".as_slice()),
@@ -299,17 +311,32 @@ pub(crate) fn parse_http_url(url: &[u8]) -> Option<UrlParts<'_>> {
     if authority.is_empty() {
         return None;
     }
+    let default_port = match scheme {
+        UrlScheme::Http => 80,
+        UrlScheme::Https => 443,
+    };
     let (host, port) = match find_byte(authority, b':') {
         Some(p) => {
             let port = parse_u16(&authority[p + 1..]).ok()?;
             (&authority[..p], port)
         }
-        None => (authority, 80),
+        None => (authority, default_port),
     };
     if host.is_empty() {
         return None;
     }
-    Some(UrlParts { host, port, path })
+    Some(UrlParts { scheme, host, port, path })
+}
+
+/// Parse an absolute `http://host[:port][/path]` URL.
+///
+/// Returns `None` for any other scheme (including `https` — the plain
+/// http client cannot follow those).
+pub(crate) fn parse_http_url(url: &[u8]) -> Option<UrlParts<'_>> {
+    match parse_url(url) {
+        Some(u) if u.scheme == UrlScheme::Http => Some(u),
+        _ => None,
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -682,8 +709,31 @@ mod tests {
     }
 
     #[test]
-    fn url_https_rejected() {
+    fn url_https_rejected_by_http_parser() {
         assert!(parse_http_url(b"https://example.com/").is_none());
+    }
+
+    #[test]
+    fn url_https_parsed() {
+        let u = parse_url(b"https://example.com/x").unwrap();
+        assert_eq!(u.scheme, UrlScheme::Https);
+        assert_eq!(u.host, b"example.com");
+        assert_eq!(u.port, 443);
+        assert_eq!(u.path, b"/x");
+    }
+
+    #[test]
+    fn url_https_with_port() {
+        let u = parse_url(b"HTTPS://example.com:8443").unwrap();
+        assert_eq!(u.scheme, UrlScheme::Https);
+        assert_eq!(u.port, 8443);
+        assert_eq!(u.path, b"/");
+    }
+
+    #[test]
+    fn url_other_scheme_rejected() {
+        assert!(parse_url(b"ftp://example.com/").is_none());
+        assert!(parse_url(b"//example.com/").is_none());
     }
 
     #[test]

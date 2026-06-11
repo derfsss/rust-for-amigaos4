@@ -147,6 +147,9 @@ jobs:
       - name: Build examples/aminet-browser (link to ELF)
         run: ./build.sh examples/aminet-browser
 
+      - name: Build examples/https-client (link to ELF)
+        run: ./build.sh examples/https-client
+
       # ── Verify each example produced a PPC ELF ───────────────────
       # Cheap insurance against `make all` silently no-op'ing.
       - name: Verify ELF outputs

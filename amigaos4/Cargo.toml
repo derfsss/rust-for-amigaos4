@@ -13,6 +13,9 @@ thread = []
 time = []
 env = []
 net = []
+# HTTPS over the clib4-built OpenSSL. Opt-in (not part of `app`)
+# because it adds -lssl -lcrypto to the final link.
+tls = ["net"]
 
 [dependencies]
 amigaos4-sys = { path = "../amigaos4-sys", features = ["locale", "graphics", "timer", "iffparse", "asl", "listbrowser", "application"] }

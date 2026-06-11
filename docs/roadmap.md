@@ -234,25 +234,20 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   chooser (+`ChooserLabels`), slider.
 - [x] **HTTP improvements** — follows redirects (5 hops), decodes chunked
   transfer encoding.
-- [ ] **HTTPS via OpenSSL (clib4)** — the Docker SDK ships a full
-  clib4-built userland under `SDK/local/clib4/` (134 pkg-config
-  packages), including **OpenSSL 1.1.1k+quic (`-lssl -lcrypto`,
-  default) and OpenSSL 3 (`lib/openssl3/`)**. A TLS client links
-  cleanly in application mode (verified:
-  `ppc-amigaos-gcc -mcrt=clib4 t.c -lssl -lcrypto -lz -lpthread
-  -lauto` with `SSL_CTX_new(TLS_client_method())`). Because these
-  OpenSSL builds sit on clib4's own socket fds, `SSL_set_fd` works
-  directly with our `TcpStream` fd — no ISocket plumbing at all.
-  Plan: `https` module (feature `tls`) over extern OpenSSL calls,
-  Makefile gains `-lssl -lcrypto`; cert verification off by default
-  (no system CA store on AmigaOS) with an opt-in CA-file API.
-  The earlier AmiSSL route (probe-validated, see
-  `thread-amissl-probe`) remains the runtime-library alternative for
-  binaries that must not statically link OpenSSL.
-  Note: the shipped `libcurl.a` does NOT currently link (built
-  against OpenSSL 3 while the default `-L` resolves the 1.1 libs
-  first, and full-path linking still misses `EVP_PKEY_get_bn_param`
-  providers) — revisit if the Docker image updates.
+- [x] **HTTPS via OpenSSL (clib4)** — `amigaos4::https` (feature
+  `tls`, link `-lssl -lcrypto -lz`): `TlsStream` (Read/Write RAII,
+  SNI, opt-in CA-file verification via `TlsConfig`) and
+  `https::get()` mirroring `http::get` with https-redirect following
+  and chunked decoding. Rides the clib4-built OpenSSL 1.1.1k+quic
+  from `SDK/local/clib4/lib`, so `SSL_set_fd` takes the `TcpStream`
+  fd directly — no ISocket plumbing. Verification is off by default
+  (no system CA store); `examples/https-client` is the end-to-end
+  demo. The AmiSSL route (probe-validated, see `thread-amissl-probe`)
+  remains the runtime-library alternative.
+  Note: the SDK's `libcurl.a` does NOT currently link (built against
+  OpenSSL 3 while the default `-L` resolves 1.1 first, and full-path
+  linking still misses `EVP_PKEY_get_bn_param` providers) — revisit
+  when the Docker image updates.
 - [x] **Async integration** — `timer::delay_async()` and
   `AmigaWindow::next_event()` futures; the executor waits on registered
   external signals, so one executor selects over sockets, timers, and

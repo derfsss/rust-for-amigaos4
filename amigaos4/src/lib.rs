@@ -84,5 +84,9 @@ pub mod net;
 pub mod dns;
 #[cfg(all(feature = "net", target_arch = "powerpc"))]
 pub mod http;
+// `tls` additionally requires OpenSSL on the link line (-lssl -lcrypto),
+// so it is opt-in rather than part of the `app` default set.
+#[cfg(all(feature = "tls", target_arch = "powerpc"))]
+pub mod https;
 
 pub use error::{AmigaError, Result};
