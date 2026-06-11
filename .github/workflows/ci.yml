@@ -144,6 +144,9 @@ jobs:
       - name: Build examples/ram-device (link to ELF)
         run: ./build.sh examples/ram-device
 
+      - name: Build examples/aminet-browser (link to ELF)
+        run: ./build.sh examples/aminet-browser
+
       # ── Verify each example produced a PPC ELF ───────────────────
       # Cheap insurance against `make all` silently no-op'ing.
       - name: Verify ELF outputs
