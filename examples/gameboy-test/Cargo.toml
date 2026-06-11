@@ -1,0 +1,30 @@
+[package]
+name = "gameboy-test"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+
+[lib]
+name = "gameboy_test"
+crate-type = ["staticlib"]
+path = "src/main.rs"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+# Emulation speed matters here (Blargg's suite runs ~55s of emulated
+# Game Boy time), so optimise for speed rather than size.
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+[dependencies]
+# A complete no_std Game Boy emulator from crates.io — the third-party
+# real-world-code test for this toolchain.
+padme-core = "0.0.1"
+amigaos4-sys = { path = "../../amigaos4-sys", features = ["exec", "dos", "intuition", "utility"] }
+amigaos4 = { path = "../../amigaos4" }
+amigaos4-alloc = { path = "../../amigaos4-alloc" }

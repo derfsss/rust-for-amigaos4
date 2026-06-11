@@ -7,13 +7,13 @@ Last updated: 2026-06-11 (post-1.0 improvement plan, first wave landed)
 - 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (31 safe wrapper modules)
 - Three build modes: application (clib4 + `-lauto`), driver (no CRT, ExecAllocator), shared library (Resident + interface vectors)
 - Build infrastructure: `build.sh`/`build.bat`, Docker-based linking, fake linker trick
-- CI pipeline: GitHub Actions cross-compiles all crates + 27 examples, runs host tests for all 3 crates; rustdoc published via Pages
+- CI pipeline: GitHub Actions cross-compiles all crates + 28 examples, runs host tests for all 3 crates; rustdoc published via Pages
 - **~365 total tests**: 308 host-side (213 amigaos4 unit + 3 doctests + 5 sys + 2 alloc + 85 black-box in `Tests/`), 60 target-side (51 main + 5 GUI + 4 net). In-source tests of the clib4 POSIX modules compile only for the PPC target; their behaviour is exercised by the target-side harnesses.
 - `serial_println!` macro for formatted debug output via `core::fmt::Write`
 - Reusable panic handler with file/line/message output
 - `cargo-amiga.sh`/`.bat` wrapper for project scaffolding, builds, and deploy/run/test on fleet targets
 - 3 templates: app, driver, library
-- 27 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config
+- 28 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config, gameboy-test
 - Tested on QEMU (`-M amigaone`) and real X5000 hardware (P5020, Kickstart 54.57)
 - All code is `no_std`; `Vec`, `String`, `format!`, `Box` work via global allocator
 - C glue for 5 varargs-only SDK methods

@@ -18,14 +18,14 @@ rust-for-amigaos4/
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01)
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates
-  examples/           27 examples (hello, hello-driver, hello-library, test-harness,
+  examples/           28 examples (hello, hello-driver, hello-library, test-harness,
                       test-harness-gui, test-harness-net, file-io-demo, timer-demo,
                       thread-demo, gui-demo, net-demo, async-demo,
                       thread-amissl-probe, http-client, zlib-roundtrip,
                       picture-viewer, wbstartup-hello, xadmaster-list,
-                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config)
+                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config, gameboy-test)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
-  .github/workflows/  CI pipeline (builds all crates + 27 examples, runs host tests)
+  .github/workflows/  CI pipeline (builds all crates + 28 examples, runs host tests)
   cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 

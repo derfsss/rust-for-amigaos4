@@ -28,9 +28,10 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **Clipboard** — `read_text()` / `write_text()` via IFFParse FTXT/CHRS format
 - **Shared library output** — template with Resident struct, RTF_AUTOINIT, interface vector tables
 - **Exec device support** — `examples/ram-device` is a complete `.device` (BeginIO/AbortIO, quick I/O) in Rust; `DmaBuffer` pairs MEMF_SHARED with cache maintenance
+- **Third-party crates just work** — `examples/gameboy-test` runs Blargg's CPU tests inside padme-core, a complete no_std Game Boy emulator pulled straight from crates.io
 - **PPC inline assembly** — cache flush/invalidate, MMIO read/write (8/16/32-bit), memory barriers
 - **~365 tests** — host-side per-crate unit tests, doctests, and the black-box suite in `Tests/`, plus 60 target-side integration tests run on QEMU
-- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 27 examples, runs host tests, publishes rustdoc
+- **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 28 examples, runs host tests, publishes rustdoc
 
 ---
 
@@ -196,14 +197,14 @@ rust-for-amigaos4/
   rust-toolchain.toml Pins the exact Rust nightly (2026-03-01) used for all builds
   target-spec/        Custom Rust target JSON + fake linker scripts
   templates/          app/, driver/, and library/ starter templates
-  examples/           27 examples (hello, hello-driver, hello-library, test-harness,
+  examples/           28 examples (hello, hello-driver, hello-library, test-harness,
                       test-harness-gui, test-harness-net, file-io-demo, timer-demo,
                       thread-demo, gui-demo, net-demo, async-demo,
                       thread-amissl-probe, http-client, zlib-roundtrip,
                       picture-viewer, wbstartup-hello, xadmaster-list,
-                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config)
+                      async-net-echo, iff-dump, locale-i18n-hello, audio-tone, ram-device, aminet-browser, https-client, sqlite3-demo, json-config, gameboy-test)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
-  .github/workflows/  CI pipeline (builds all crates + 27 examples, runs host tests)
+  .github/workflows/  CI pipeline (builds all crates + 28 examples, runs host tests)
   cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 
@@ -311,6 +312,23 @@ build-std-features = ["compiler-builtins-mem"]
 ### AllocVecTagList returns NULL
 
 Check MEMF constants: `MEMF_PRIVATE = 1 << 11` (0x800), `MEMF_SHARED = 1 << 12` (0x1000).
+
+### Crash (DSI) right at startup with a big dependency
+
+The default AmigaOS shell stack is 64 KB; Rust code with large by-value
+structs (e.g. an emulator core with an embedded framebuffer) can need a
+bigger stack frame than that in a single prologue. Embed a `$STACK:`
+cookie and pin it at link time (see `examples/gameboy-test`):
+
+```rust
+#[used]
+#[no_mangle]
+pub static STACK_COOKIE: [u8; 16] = *b"$STACK:2000000\n\0";
+```
+
+```make
+LDFLAGS = -mcrt=clib4 -Wl,--gc-sections -Wl,--undefined=STACK_COOKIE
+```
 
 ### "fake-linker" not found
 
