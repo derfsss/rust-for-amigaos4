@@ -2,7 +2,7 @@
 
 Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust.
 
-**Status: Beta** — 25 safe wrapper modules, 129 SDK interface bindings, ~255 tests, 3 build modes. Tested on QEMU (`-M amigaone`).
+**Status: Beta** — 25 safe wrapper modules, 129 SDK interface bindings, ~285 tests, 3 build modes. Tested on QEMU (`-M amigaone`).
 
 > **Made with AI** — This project (code, bindings, build infrastructure, and documentation) was built using [Claude Code](https://claude.ai/claude-code) by Anthropic.
 
@@ -16,7 +16,7 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **25 safe wrapper modules** — GUI (ReAction), networking (TCP/DNS/HTTP), async runtime, timer device, clipboard (IFFParse), DOS, file I/O, threads, and more
 - **129 AmigaOS SDK interface bindings** — Exec, DOS, Intuition, Graphics, Timer, IFFParse, and 123 more, all feature-gated
 - **Direct vtable dispatch** — call any interface method from Rust via `#[repr(C)]` structs (no overhead)
-- **RAII everywhere** — `AmigaWindow`, `AmigaTimer`, `AmigaLock`, `AmigaVec`, `TcpStream`, `PubScreen`, and 7 more auto-cleanup on drop
+- **RAII everywhere** — `AmigaWindow`, `AmigaTimer`, `AmigaLock`, `AmigaVec`, `TcpStream`, `PubScreen`, and 10 more auto-cleanup on drop
 - **ReAction GUI** — `LayoutBuilder` DSL, `event_loop`, button/string/checkbox/integer gadgets
 - **Networking** — `TcpStream`, `TcpListener`, `SocketAddr` parser, DNS resolution, HTTP/1.1 GET client
 - **Async runtime** — cooperative executor with Exec signal-based waking, `spawn`/`run`/`block_on`
@@ -24,7 +24,7 @@ Write native AmigaOS 4.1 applications, device drivers, and shared libraries in R
 - **Clipboard** — `read_text()` / `write_text()` via IFFParse FTXT/CHRS format
 - **Shared library output** — template with Resident struct, RTF_AUTOINIT, interface vector tables
 - **PPC inline assembly** — cache flush/invalidate, MMIO read/write (8/16/32-bit), memory barriers
-- **~255 tests** — 193 host-side unit/integration tests + 60 target-side integration tests
+- **~285 tests** — 225 host-side (per-crate unit tests, doctests, and the black-box suite in `Tests/`) + 60 target-side integration tests
 - **CI pipeline** — GitHub Actions cross-compiles all 3 crates + 22 examples, runs host tests
 
 ---
@@ -199,7 +199,7 @@ rust-for-amigaos4/
                       async-net-echo, iff-dump, locale-i18n-hello, audio-tone)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
   .github/workflows/  CI pipeline (builds all crates + 22 examples, runs host tests)
-  cargo-amiga.sh/.bat Project scaffolding and build wrapper
+  cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 
 ## amigaos4 Crate — 25 Modules
@@ -220,7 +220,7 @@ fs, time, env, thread, net, dns, http
 | **Entry point** | `main()` | `_start()` → `rust_handler_main()` | Resident + `libInit()` |
 | **Allocator** | `Clib4Allocator` | `ExecAllocator` | `ExecAllocator` |
 | **POSIX modules** | fs, time, env, thread, net, dns, http | Not available | Not available |
-| **Link flags** | `-mcrt=clib4 -lauto` | `-nostartfiles -nodefaultlibs -lgcc` | `-nostartfiles -nodefaultlibs -lgcc` |
+| **Link flags** | `-mcrt=clib4 -lauto` | `-nostartfiles -nodefaultlibs -lgcc` | `-nostartfiles -nodefaultlibs -Wl,--undefined=RomTag -lgcc` |
 | **Output** | Executable | Handler/device | `.library` file |
 
 All three modes support `Vec`, `String`, `format!`, `Box` via the global allocator.

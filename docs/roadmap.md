@@ -7,13 +7,13 @@ Last updated: 2026-04-14 (post-Phase-10 hardening)
 - 3 crates: `amigaos4-sys` (129 interface bindings), `amigaos4-alloc` (2 allocator backends), `amigaos4` (25 safe wrapper modules)
 - Three build modes: application (clib4 + `-lauto`), driver (no CRT, ExecAllocator), shared library (Resident + interface vectors)
 - Build infrastructure: `build.sh`/`build.bat`, Docker-based linking, fake linker trick
-- CI pipeline: GitHub Actions cross-compiles all crates + 12 examples, runs host tests for all 3 crates
-- **~255 total tests**: 193 host-side (173 unit + 13 integration + 5 sys + 2 alloc) + 2 doctests, 60 target-side (51 main + 5 GUI + 4 net)
+- CI pipeline: GitHub Actions cross-compiles all crates + 22 examples, runs host tests for all 3 crates
+- **~285 total tests**: 225 host-side (132 amigaos4 unit + 2 doctests + 5 sys + 2 alloc + 84 black-box in `Tests/`), 60 target-side (51 main + 5 GUI + 4 net). In-source tests of the clib4 POSIX modules compile only for the PPC target; their behaviour is exercised by the target-side harnesses.
 - `serial_println!` macro for formatted debug output via `core::fmt::Write`
 - Reusable panic handler with file/line/message output
 - `cargo-amiga.sh`/`.bat` wrapper for project scaffolding and builds
 - 3 templates: app, driver, library
-- 12 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo
+- 22 examples: hello, hello-driver, hello-library, test-harness, test-harness-gui, test-harness-net, file-io-demo, timer-demo, thread-demo, gui-demo, net-demo, async-demo, thread-amissl-probe, http-client, zlib-roundtrip, picture-viewer, wbstartup-hello, xadmaster-list, async-net-echo, iff-dump, locale-i18n-hello, audio-tone
 - Tested on QEMU (`-M amigaone`) only
 - All code is `no_std`; `Vec`, `String`, `format!`, `Box` work via global allocator
 - C glue for 5 varargs-only SDK methods

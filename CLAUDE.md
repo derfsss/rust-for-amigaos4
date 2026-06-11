@@ -4,7 +4,7 @@
 
 Rust for AmigaOS 4 — Write native AmigaOS 4.1 applications, device drivers, and shared libraries in Rust (`no_std`).
 
-**All 10 roadmap phases complete. ~255 tests, 25 modules, 3 templates, shared library output.**
+**All 10 roadmap phases complete. ~285 tests, 25 modules, 3 templates, shared library output.**
 
 ## Repository Layout
 
@@ -26,7 +26,7 @@ rust-for-amigaos4/
                       async-net-echo, iff-dump, locale-i18n-hello, audio-tone)
   docs/               Roadmap, 10 phase progress logs, nostd-ecosystem guide
   .github/workflows/  CI pipeline (builds all crates + 22 examples, runs host tests)
-  cargo-amiga.sh/.bat Project scaffolding and build wrapper
+  cargo-amiga.sh/.bat Project scaffolding, build, and run/test wrapper
 ```
 
 ## amigaos4 Crate Modules (25 total)
@@ -48,6 +48,10 @@ fs, time, env, thread, net, dns, http
 - `clib4-nightly` / `clib4-src` refreshed to upstream clib4 `778afb03` (pthread
   per-thread-init crash fix).
 - CI (`.github/workflows/ci.yml`) runs on `main` only.
+- `cargo-amiga.sh` / `cargo-amiga.bat` — `run` and `test` subcommands: build,
+  then deploy + launch on a fleet target (QEMU or hardware) via the
+  amiga-fleet CLI (sibling MCP-AmigaOS4 checkout, or `AMIGA_FLEET_MCP_HOST`).
+  `test` waits for a serial-output regex (`--wait`) as a headless smoke.
 
 ## Conventions
 
