@@ -234,17 +234,25 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   chooser (+`ChooserLabels`), slider.
 - [x] **HTTP improvements** — follows redirects (5 hops), decodes chunked
   transfer encoding.
-- [ ] **HTTPS via AmiSSL** — minimal blocking GET. The
-  `thread-amissl-probe` example already validates the whole init chain
-  on QEMU (master open → `InitAmiSSLMaster` → `OpenAmiSSL` →
-  `InitAmiSSLA` → `TLS_method` → `SSL_CTX_new`), and the amissl
-  bindings carry `SSL_new/set_fd/connect/read/write`. The missing
-  piece is socket plumbing: clib4 keeps its `ISocket`/fd mapping
-  internal, so the https module must open bsdsocket.library itself
-  (own `socket`/`connect`/`GetHostByName` via `ISocket`) and hand that
-  interface + native socket to AmiSSL — bypassing clib4's fd layer
-  entirely. Self-contained but a second networking path; deferred
-  until it can be target-tested end-to-end.
+- [ ] **HTTPS via OpenSSL (clib4)** — the Docker SDK ships a full
+  clib4-built userland under `SDK/local/clib4/` (134 pkg-config
+  packages), including **OpenSSL 1.1.1k+quic (`-lssl -lcrypto`,
+  default) and OpenSSL 3 (`lib/openssl3/`)**. A TLS client links
+  cleanly in application mode (verified:
+  `ppc-amigaos-gcc -mcrt=clib4 t.c -lssl -lcrypto -lz -lpthread
+  -lauto` with `SSL_CTX_new(TLS_client_method())`). Because these
+  OpenSSL builds sit on clib4's own socket fds, `SSL_set_fd` works
+  directly with our `TcpStream` fd — no ISocket plumbing at all.
+  Plan: `https` module (feature `tls`) over extern OpenSSL calls,
+  Makefile gains `-lssl -lcrypto`; cert verification off by default
+  (no system CA store on AmigaOS) with an opt-in CA-file API.
+  The earlier AmiSSL route (probe-validated, see
+  `thread-amissl-probe`) remains the runtime-library alternative for
+  binaries that must not statically link OpenSSL.
+  Note: the shipped `libcurl.a` does NOT currently link (built
+  against OpenSSL 3 while the default `-L` resolves the 1.1 libs
+  first, and full-path linking still misses `EVP_PKEY_get_bn_param`
+  providers) — revisit if the Docker image updates.
 - [x] **Async integration** — `timer::delay_async()` and
   `AmigaWindow::next_event()` futures; the executor waits on registered
   external signals, so one executor selects over sockets, timers, and
@@ -253,6 +261,16 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   (`AppRegistration`, single-instance); AHI actual playback
   (`examples/audio-tone` plays a synthesised tone via CMD_WRITE,
   verified on QEMU). Remaining: datatypes beyond load/query.
+- [ ] **clib4 userland integration** — the Docker SDK's
+  `SDK/local/clib4/` carries clib4-built static libs ready to link
+  into application-mode Rust via extern FFI + Makefile `-l` flags:
+  sqlite3, jansson (JSON), libxml2/expat/yaml, libpng/jpeg/tiff/webp/
+  gif, freetype/harfbuzz/cairo/pixman/fontconfig, SDL2 (+image/mixer/
+  ttf/net, gl4es GL), ffmpeg (avcodec/avformat), FLAC/ogg/vorbis/opus/
+  mp3lame/sndfile, ncursesw/readline, pcre2, lua 5.4, libffi, boost,
+  icu, gmp/mpfr, zip/lz4/zstd-family, c-ares, nghttp2/3. Candidate
+  next examples: sqlite3-demo, json-config (jansson), sdl2-demo.
+  (`zlib-roundtrip` already demonstrates the pattern with `-lz`.)
 
 ### D. Driver story
 
