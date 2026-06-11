@@ -56,6 +56,8 @@ Examples:
   ./cargo-amiga.sh new my-cool-app
   ./cargo-amiga.sh new ram-handler --mode driver
   ./cargo-amiga.sh build my-cool-app
+  ./cargo-amiga.sh run my-cool-app --target qemu
+  ./cargo-amiga.sh test examples/test-harness --wait '51/51 tests passed'
   ./cargo-amiga.sh clean my-cool-app
   ./cargo-amiga.sh setup
 USAGE
@@ -155,15 +157,9 @@ cmd_new() {
 
     # --- Cargo.toml replacements ---
     if [ "$MODE" = "app" ]; then
-        # App template placeholders: name = "myapp", lib name = "myapp", libmyapp.a
+        # App template has name = "myapp" twice (package + lib). Replace both
+        # with the hyphenated name, then fix the [lib] one to use underscores.
         sed -i "s/name = \"myapp\"/name = \"$BIN_NAME\"/" "$TARGET_DIR/Cargo.toml"
-        # lib name uses underscores (second occurrence)
-        # The template has: name = "myapp" twice — package name and lib name
-        # After the first sed, the package name is replaced. The lib name is still "myapp".
-        # Actually both were "myapp" and now both are replaced. We need lib name with underscores.
-        # Let's do a targeted replacement:
-        #   [lib]\nname = "<bin_name>" -> [lib]\nname = "<lib_name>"
-        # Use a simpler approach: replace in the [lib] section specifically
         sed -i "/^\[lib\]$/,/^\[/ s/name = \"$BIN_NAME\"/name = \"$LIB_NAME\"/" "$TARGET_DIR/Cargo.toml"
     else
         # Driver template placeholders: name = "my-handler" (package), name = "my_handler" (lib)
