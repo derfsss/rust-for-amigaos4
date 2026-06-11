@@ -52,16 +52,40 @@ fs, time, env, thread, net, dns, http
   then deploy + launch on a fleet target (QEMU or hardware) via the
   amiga-fleet CLI (sibling MCP-AmigaOS4 checkout, or `AMIGA_FLEET_MCP_HOST`).
   `test` waits for a serial-output regex (`--wait`) as a headless smoke.
+- v0.6.0 (2026-06-11): `amstr!` + nul-termination validation in every
+  OS-string entry point; ReAction tag values corrected against the SDK
+  54.16 headers (the old ones were invented and silently ignored — see
+  amigaos4/CHANGELOG.md); menus (menuclass), ASL file requester,
+  listbrowser/chooser/slider, application.library registration; async
+  timer + IDCMP futures; `DmaBuffer`; HTTP redirects + chunked;
+  ram-device (a complete exec .device) and aminet-browser examples;
+  rustdoc publishing workflow.
 
 ## Conventions
 
 - Debug: `amigaos4::serial_println!("x = {}", x)`
 - Panic: `amigaos4::panic::default_panic_handler(info)`
 - RAII: `Amiga*` prefix with Drop impls
-- GUI: `LayoutBuilder::vertical().add(button(1, b"OK\0")?).build()?`
-- Events: `event_loop(&win, |event| match event { ... })`
+- GUI: `LayoutBuilder::vertical().add(button(1, amstr!("OK"))?).build()?`
+- Events: `event_loop(&win, |event| match event { Event::GadgetUp { id, code } => ..., ... })`
+- Menus: `MenuBuilder::new().menu(amstr!("Project")).item(ID, amstr!("Open...")).build()?`
 - Async: `Executor::new()?.spawn(async { ... }); exec.run();`
 - Networking: `TcpStream::connect(&addr)?`, `http::get(host, port, path)?`
-- OS strings: `b"text\0"` (null-terminated)
+- OS strings: build with `amstr!("text")` (compile-time `\0`); every wrapper
+  validates the terminator at the FFI boundary (`cstr::require_nul`)
 - FFI pointer validation: check returned pointers are within expected buffer ranges
 - C string reads: always capped with MAX_*_LEN constants
+- New Amiga tag constants: take values from the SDK headers
+  (`C:\msys64\home\rich_\sdk\include\include_h`) and pin them with unit tests
+
+## Target testing
+
+- QEMU: `MSYS_NO_PATHCONV=1 ./cargo-amiga.sh test examples/test-harness
+  --target qemu-amigaone --wait '51/51 tests passed'` (GUI harness marker:
+  `5/5 tests passed`). `MSYS_NO_PATHCONV=1` is required under Git Bash.
+- Real X5000: deploy test files to `Files:Temp/Rust/` (persists across
+  reboots — do not use RAM:). clib4 2.1 is installed in `LIBS:` (2.0
+  backup: `LIBS:clib4.library_2.0.bak`). Do not use ColdReboot on the
+  X5000 (it wedges) — power-cycle via the fleet power tools instead.
+  ahi.device unit 0 is unavailable there (no AHI-supported card), so
+  audio playback is QEMU-only.
