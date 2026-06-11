@@ -244,10 +244,20 @@ purpose (writing real AmigaOS 4.1 apps, drivers, and libraries in Rust).
   (no system CA store); `examples/https-client` is the end-to-end
   demo. The AmiSSL route (probe-validated, see `thread-amissl-probe`)
   remains the runtime-library alternative.
-  Note: the SDK's `libcurl.a` does NOT currently link (built against
-  OpenSSL 3 while the default `-L` resolves 1.1 first, and full-path
-  linking still misses `EVP_PKEY_get_bn_param` providers) — revisit
-  when the Docker image updates.
+  Note on libcurl: the Docker image's bundled `libcurl.a` does not
+  link (OpenSSL version skew). The fix is the **clib4 apt repository**
+  (https://github.com/AmigaLabs/clib4/wiki/Clib4-apt-packages-repository,
+  `deb https://clib4pkg.amigasoft.net/ubuntu/ focal main`): installing
+  `curl7-clib4` (7.85, matched to the openssl-quic 1.1.1k the SDK
+  ships) gives a libcurl that links cleanly — verified inside the
+  walkero image. Gotcha: apt packages install under
+  `/usr/ppc-amigaos/SDK/local/clib4/` while the image's compiler uses
+  `/opt/ppc-amigaos/ppc-amigaos/SDK/`, so link the apt copy by full
+  path (or overlay it into the /opt SDK the way `clib4-nightly/` is).
+  The repo carries ~120 clib4 packages (curl, openssl3 3.2, ffmpeg 7,
+  sqlite, SDL2, zstd, ...) — also the upgrade path for the userland
+  item above. A `curl` FFI module (full HTTP(S)/FTP/proxies/auth)
+  is a candidate alternative to the hand-rolled http/https clients.
 - [x] **Async integration** — `timer::delay_async()` and
   `AmigaWindow::next_event()` futures; the executor waits on registered
   external signals, so one executor selects over sockets, timers, and
