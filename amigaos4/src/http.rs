@@ -109,7 +109,9 @@ fn parse_status_code(data: &[u8]) -> u16 {
         if b >= b'0' && b <= b'9' {
             code = code * 10 + (b - b'0') as u16;
         } else {
-            break;
+            // Status codes are exactly three digits; a partial parse
+            // (e.g. "2X4") would otherwise return a bogus small value.
+            return 0;
         }
     }
     code
@@ -203,6 +205,15 @@ mod tests {
     fn status_code_malformed() {
         // Non-digit at position 9
         let data = b"HTTP/1.1 X00 Bad\r\n\r\n";
+        assert_eq!(parse_status_code(data), 0);
+    }
+
+    #[test]
+    fn status_code_partial_digits() {
+        // Non-digit in the middle of the code must not yield a partial parse.
+        let data = b"HTTP/1.1 2X4 Bad\r\n\r\n";
+        assert_eq!(parse_status_code(data), 0);
+        let data = b"HTTP/1.1 20X Bad\r\n\r\n";
         assert_eq!(parse_status_code(data), 0);
     }
 
