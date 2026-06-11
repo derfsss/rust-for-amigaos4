@@ -33,6 +33,7 @@ extern crate alloc;
 pub mod application;
 pub mod asl;
 pub mod cstr;
+pub mod datatypes;
 pub mod error;
 pub mod tag;
 pub mod mem;
