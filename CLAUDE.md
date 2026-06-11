@@ -77,6 +77,10 @@ fs, time, env, thread, net, dns, http, https (tls feature)
 - C string reads: always capped with MAX_*_LEN constants
 - New Amiga tag constants: take values from the SDK headers
   (`C:\msys64\home\rich_\sdk\include\include_h`) and pin them with unit tests
+- Big stack frames (large by-value structs, e.g. third-party emulator
+  cores): the default shell stack is 64 KB — embed a `$STACK:` cookie
+  (`#[used] #[no_mangle] static STACK_COOKIE`) and pin it with
+  `-Wl,--undefined=STACK_COOKIE`, like examples/gameboy-test
 
 ## Target testing
 
