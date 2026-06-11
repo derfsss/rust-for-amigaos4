@@ -171,10 +171,20 @@ struct RawIntuiMessage {
     class: u32,
     code: u16,
     qualifier: u16,
-    _iaddress: APTR,
+    iaddress: APTR,
     mouse_x: i16,
     mouse_y: i16,
 }
+
+/// Byte offset of `GadgetID` (u16) within `struct Gadget` on PPC
+/// (2-byte packed, like all OS4 system structs):
+/// ```text
+/// NextGadget*: 0 (4), LeftEdge/TopEdge/Width/Height: 4 (4 x i16),
+/// Flags/Activation/GadgetType: 12 (3 x u16), GadgetRender: 18 (4),
+/// SelectRender: 22 (4), GadgetText: 26 (4), MutualExclude: 30 (4),
+/// SpecialInfo: 34 (4), GadgetID: 38 (2), UserData: 40 (4)
+/// ```
+const GADGET_ID_OFFSET: usize = 38;
 
 /// Owned copy of IDCMP message fields. The underlying `IntuiMessage` has
 /// already been replied by the time this value is returned.
@@ -182,7 +192,8 @@ struct RawIntuiMessage {
 pub struct IntuiMsg {
     /// IDCMP class (e.g. `IDCMP_CLOSEWINDOW`).
     pub class: u32,
-    /// Event code (key code, menu number, etc.).
+    /// Event code (key code, menu number, slider level, chooser
+    /// selection, etc. — gadget-class specific for IDCMP_GADGETUP).
     pub code: u16,
     /// Input qualifier flags (shift, alt, etc.).
     pub qualifier: u16,
@@ -190,6 +201,10 @@ pub struct IntuiMsg {
     pub mouse_x: i16,
     /// Mouse Y position relative to the window.
     pub mouse_y: i16,
+    /// For `IDCMP_GADGETUP`/`IDCMP_GADGETDOWN`: the `GA_ID` of the
+    /// gadget (read from `IAddress->GadgetID` while the message was
+    /// alive). 0 otherwise.
+    pub gadget_id: u16,
 }
 
 // ---------------------------------------------------------------------------
@@ -359,12 +374,26 @@ impl Drop for AmigaWindow {
 /// `msg` must be a non-null pointer to a valid `IntuiMessage`.
 unsafe fn copy_intui_message(msg: *mut Message) -> IntuiMsg {
     let raw = msg as *const RawIntuiMessage;
+    let class = (*raw).class;
+
+    // For gadget events, IAddress points at the struct Gadget; capture
+    // its GadgetID while the message is still alive (it is replied —
+    // and thus freed — right after this copy).
+    let mut gadget_id = 0u16;
+    if class == IDCMP_GADGETUP || class == IDCMP_GADGETDOWN {
+        let gadget = (*raw).iaddress as *const u8;
+        if !gadget.is_null() {
+            gadget_id = *(gadget.add(GADGET_ID_OFFSET) as *const u16);
+        }
+    }
+
     IntuiMsg {
-        class: (*raw).class,
+        class,
         code: (*raw).code,
         qualifier: (*raw).qualifier,
         mouse_x: (*raw).mouse_x,
         mouse_y: (*raw).mouse_y,
+        gadget_id,
     }
 }
 
@@ -404,6 +433,7 @@ mod tests {
             qualifier: 0,
             mouse_x: 0,
             mouse_y: 0,
+            gadget_id: 0,
         };
         let _copy = msg;
         let _clone = msg.clone();
@@ -418,6 +448,7 @@ mod tests {
             qualifier: 0x8000,
             mouse_x: -10,
             mouse_y: 100,
+            gadget_id: 5,
         };
         assert_eq!(msg.class, 0x200);
         assert_eq!(msg.code, 42);
